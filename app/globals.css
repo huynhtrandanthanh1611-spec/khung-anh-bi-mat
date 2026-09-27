@@ -2494,3 +2494,5 @@ h3,
 @keyframes wrong-return { 0% {opacity:.9;transform:translateX(0)} 15% {transform:translateX(-6px)} 30% {transform:translateX(6px)} 45% {transform:translateX(-4px)} 60% {transform:translateX(0);opacity:.85} 100% {transform:scale(.7);opacity:0} }
 @media(max-width:700px) { .corner-rainbow {width:55px;right:24%;top:5px} .garden-edge {font-size:23px} .game-mode .puzzle-board {border-width:5px;border-radius:20px} }
 @media(prefers-reduced-motion:reduce) { .wrong-tray-piece,.wrong-piece-return {animation:none} .wrong-piece-return {opacity:.5} .reaction-symbol {animation:none} .game-cloud,.floating-star {animation:none} }
+/* Decorative overflow must not scroll the fixed game when a piece receives focus. */
+.game-mode { overflow: clip; }
