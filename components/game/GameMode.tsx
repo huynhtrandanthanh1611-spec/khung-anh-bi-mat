@@ -28,7 +28,7 @@ export default function GameMode({
   onExit: () => void;
 }) {
   const [phase, setPhase] = useState<
-      "start" | "playing" | "picture" | "reward" | "done"
+      "start" | "playing" | "picture" | "done"
     >("start"),
     [index, setIndex] = useState(0),
     [sound, setSound] = useState(true),
@@ -37,6 +37,7 @@ export default function GameMode({
   const [rewardSticker, setRewardSticker] = useState<RewardSticker | null>(
     null,
   );
+  const [showInlineReward, setShowInlineReward] = useState(false);
   const previousSticker = useRef<string | undefined>(undefined);
   const context = useRef<AudioContext | null>(null);
   const voices = useRef<OscillatorNode[]>([]);
@@ -48,8 +49,9 @@ export default function GameMode({
   const round = game.rounds[index],
     total = game.rounds.length;
   useEffect(() => {
+    setShowInlineReward(false);
     if (phase !== "picture") return;
-    const timer = window.setTimeout(() => setPhase("reward"), 1000);
+    const timer = window.setTimeout(() => setShowInlineReward(true), 800);
     return () => window.clearTimeout(timer);
   }, [phase, session, index]);
   useEffect(() => {
@@ -200,65 +202,31 @@ export default function GameMode({
           />
         </main>
       ) : phase === "picture" ? (
-        <main className="completed-picture-screen">
+        <main className={`completed-picture-screen inline-completion ${showInlineReward ? "rewards-visible" : ""}`}>
           <Confetti />
           <h1>Bức tranh của chúng mình!</h1>
-          <div className="completed-picture-frame">
-            <img
-              src={round.imageUrl}
-              alt="Bức tranh hoàn chỉnh vừa ghép xong"
-            />
+          <div className="inline-picture-stage">
+            <div className="completed-picture-frame inline-picture-frame">
+              <img className="finished-artwork" src={round.imageUrl} alt="Bức tranh hoàn chỉnh vừa ghép xong" />
+              {showInlineReward && rewardSticker && <img className="inline-sticker" src={stickerImage(rewardSticker.id)} alt={rewardSticker.name} />}
+            </div>
           </div>
-        </main>
-      ) : phase === "reward" ? (
-        <main className="celebration">
-          <Confetti />
-          <div
-            className={`reward-content ${rewardSticker && !round.completionImageUrl && !round.completionText ? "sticker-only" : ""}`}
-          >
-            {rewardSticker && (
-              <img
-                className="reward-sticker"
-                src={stickerImage(rewardSticker.id)}
-                alt={rewardSticker.name}
-              />
-            )}
-            {round.completionText && (
-              <p className="completion-text">{round.completionText}</p>
-            )}
-            {round.completionImageUrl && (
-              <img
-                className="completion-image"
-                src={round.completionImageUrl}
-                alt="Ảnh chúc mừng của thầy cô"
-              />
-            )}
-            {!rewardSticker &&
-              !round.completionText &&
-              !round.completionImageUrl && (
-                <>
-                  <div className="reward-star" aria-hidden="true">
-                    ⭐
-                  </div>
-                  <h1>Giỏi quá!</h1>
-                </>
-              )}
+          <div className="inline-reward-space" aria-live="polite">
+            {showInlineReward && <>
+              <div className="inline-reward-details">
+                {round.completionText && <p className="inline-praise">{round.completionText}</p>}
+                {round.completionImageUrl && <img className="inline-reward-image" src={round.completionImageUrl} alt="Ảnh chúc mừng của thầy cô" />}
+                {!rewardSticker && !round.completionText && !round.completionImageUrl && <p className="inline-praise">⭐ Giỏi quá!</p>}
+              </div>
+              <button className="button game-button" onClick={() => {
+                setShowInlineReward(false);
+                if (index === total - 1) { setPhase("done"); chime(true); }
+                else { setIndex(i => i + 1); setPhase("playing"); }
+              }}>
+                {index === total - 1 ? "HOÀN THÀNH" : "TIẾP TỤC"}<ArrowRight size={27} />
+              </button>
+            </>}
           </div>
-          <button
-            className="button game-button"
-            onClick={() => {
-              if (index === total - 1) {
-                setPhase("done");
-                chime(true);
-              } else {
-                setIndex((i) => i + 1);
-                setPhase("playing");
-              }
-            }}
-          >
-            {index === total - 1 ? "HOÀN THÀNH" : "TIẾP TỤC"}
-            <ArrowRight size={27} />
-          </button>
         </main>
       ) : (
         <main className="celebration final-celebration">
