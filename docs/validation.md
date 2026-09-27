@@ -22,3 +22,7 @@
 ## Game Mode: che đáp án và tăng độ rõ
 
 19 bài kiểm tra đạt. Kiểm tra hồi quy HTML lưới 0×5, 2×5, 1×1 không chứa ảnh trong ô chưa ghép; canvas 1×200 và 20×20 không vẽ ảnh gốc khi chưa ghép, chỉ vẽ crop của mảnh đã đặt. Build GitHub Pages đạt. Font Baloo 2 800 và Nunito 700 tự lưu kèm giấy phép OFL, kiểm tra glyph tiếng Việt đầy đủ.
+
+## Xem tranh và phóng to mảnh
+
+Sau mảnh cuối, hiển thị tranh tổng thể cho tới khi nhấn Nhận lời khen. Khay 6 mảnh/trang có mảnh cao 170px và vùng phóng to mảnh đang chọn phía dưới. Font giáo viên sử dụng Nunito và Baloo 2. 19 bài kiểm tra hồi quy và build GitHub Pages đạt.

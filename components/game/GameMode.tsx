@@ -27,9 +27,9 @@ export default function GameMode({
   audio: HTMLAudioElement | null;
   onExit: () => void;
 }) {
-  const [phase, setPhase] = useState<"start" | "playing" | "reward" | "done">(
-      "start",
-    ),
+  const [phase, setPhase] = useState<
+      "start" | "playing" | "picture" | "reward" | "done"
+    >("start"),
     [index, setIndex] = useState(0),
     [sound, setSound] = useState(true),
     [confirmExit, setConfirmExit] = useState(false),
@@ -157,9 +157,26 @@ export default function GameMode({
               setRewardSticker(sticker);
               previousSticker.current = sticker?.id;
               chime(true);
-              setPhase("reward");
+              setPhase("picture");
             }}
           />
+        </main>
+      ) : phase === "picture" ? (
+        <main className="completed-picture-screen">
+          <Confetti />
+          <h1>Bức tranh của chúng mình!</h1>
+          <div className="completed-picture-frame">
+            <img
+              src={round.imageUrl}
+              alt="Bức tranh hoàn chỉnh vừa ghép xong"
+            />
+          </div>
+          <button
+            className="button game-button"
+            onClick={() => setPhase("reward")}
+          >
+            NHẬN LỜI KHEN <ArrowRight size={27} />
+          </button>
         </main>
       ) : phase === "reward" ? (
         <main className="celebration">
