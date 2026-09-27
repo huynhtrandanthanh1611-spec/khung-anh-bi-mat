@@ -1,22 +1,21 @@
 import type { Game } from "@/types/game";
+export const effectiveRows = (rows: number) => (rows === 0 ? 1 : rows);
 export function pieceCount(rows: number, columns: number): bigint {
   return Number.isSafeInteger(rows) &&
     Number.isSafeInteger(columns) &&
     rows >= 0 &&
     columns >= 0
-    ? BigInt(rows) * BigInt(columns)
+    ? BigInt(effectiveRows(rows)) * BigInt(columns)
     : 0n;
 }
 export const formatCount = (count: bigint) => count.toLocaleString("vi-VN");
 export function playableError(game: Game): string | null {
   if (!game.rounds.length) return "Thêm ít nhất một ảnh để bắt đầu nhé.";
   for (const [i, r] of game.rounds.entries()) {
-    if (r.rows === 0)
-      return `Vòng ${i + 1}: vui lòng chọn số hàng để bắt đầu vòng này.`;
     if (r.columns === 0)
       return `Vòng ${i + 1}: vui lòng chọn số cột để bắt đầu vòng này.`;
     if (pieceCount(r.rows, r.columns) === 0n)
-      return `Vòng ${i + 1}: số hàng và số cột cần là số nguyên từ 1.`;
+      return `Vòng ${i + 1}: số hàng cần là số nguyên từ 0, số cột từ 1.`;
     if (!r.imageUrl)
       return `Ảnh vòng ${i + 1} chưa đọc được. Hãy chọn Thay ảnh.`;
   }
@@ -46,6 +45,7 @@ export function pieceStyle(
   columns: number,
   url: string,
 ) {
+  rows = effectiveRows(rows);
   const col = Number(piece % BigInt(columns)),
     row = Number(piece / BigInt(columns));
   return {
@@ -62,6 +62,7 @@ export function nearCorrectSlot(
   rows: number,
   columns: number,
 ) {
+  rows = effectiveRows(rows);
   const col = Number(piece % BigInt(columns)),
     row = Number(piece / BigInt(columns));
   const w = rect.width / columns,

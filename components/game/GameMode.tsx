@@ -13,6 +13,11 @@ import type { Game } from "@/types/game";
 import PuzzleBoard from "@/components/puzzle/PuzzleBoard";
 import { Modal } from "@/components/shared";
 import { Rainbow, Sun, Confetti } from "./Decor";
+import {
+  chooseRewardSticker,
+  stickerImage,
+  type RewardSticker,
+} from "@/lib/stickers";
 export default function GameMode({
   game,
   audio,
@@ -29,6 +34,10 @@ export default function GameMode({
     [sound, setSound] = useState(true),
     [confirmExit, setConfirmExit] = useState(false),
     [session, setSession] = useState(0);
+  const [rewardSticker, setRewardSticker] = useState<RewardSticker | null>(
+    null,
+  );
+  const previousSticker = useRef<string | undefined>(undefined);
   const context = useRef<AudioContext | null>(null);
   const round = game.rounds[index],
     total = game.rounds.length;
@@ -83,6 +92,8 @@ export default function GameMode({
   }
   function start() {
     wakeAudio();
+    previousSticker.current = undefined;
+    setRewardSticker(null);
     setIndex(0);
     setSession((v) => v + 1);
     setPhase("playing");
@@ -139,6 +150,12 @@ export default function GameMode({
             round={round}
             onCorrect={() => chime()}
             onComplete={() => {
+              const sticker = chooseRewardSticker(
+                round,
+                previousSticker.current,
+              );
+              setRewardSticker(sticker);
+              previousSticker.current = sticker?.id;
               chime(true);
               setPhase("reward");
             }}
@@ -147,26 +164,37 @@ export default function GameMode({
       ) : phase === "reward" ? (
         <main className="celebration">
           <Confetti />
-          <div className="reward-star" aria-hidden="true">
-            ⭐
+          <div
+            className={`reward-content ${rewardSticker && !round.completionImageUrl && !round.completionText ? "sticker-only" : ""}`}
+          >
+            {rewardSticker && (
+              <img
+                className="reward-sticker"
+                src={stickerImage(rewardSticker.id)}
+                alt={rewardSticker.name}
+              />
+            )}
+            {round.completionText && (
+              <p className="completion-text">{round.completionText}</p>
+            )}
+            {round.completionImageUrl && (
+              <img
+                className="completion-image"
+                src={round.completionImageUrl}
+                alt="Ảnh chúc mừng của thầy cô"
+              />
+            )}
+            {!rewardSticker &&
+              !round.completionText &&
+              !round.completionImageUrl && (
+                <>
+                  <div className="reward-star" aria-hidden="true">
+                    ⭐
+                  </div>
+                  <h1>Giỏi quá!</h1>
+                </>
+              )}
           </div>
-          {!round.completionImageUrl && !round.completionText ? (
-            <h1>Giỏi quá!</h1>
-          ) : (
-            <>
-              <h1 className="congrats-title">Giỏi quá!</h1>
-              {round.completionImageUrl && (
-                <img
-                  className="completion-image"
-                  src={round.completionImageUrl}
-                  alt="Ảnh chúc mừng của thầy cô"
-                />
-              )}
-              {round.completionText && (
-                <p className="completion-text">{round.completionText}</p>
-              )}
-            </>
-          )}
           <button
             className="button game-button"
             onClick={() => {

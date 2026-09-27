@@ -51,6 +51,9 @@ test("legacy games retain completion text and zero or large grids can be saved",
   loaded.rounds[0].completionText = "Giỏi quá";
   loaded.rounds[0].completionImagePath = "reward.webp";
   loaded.rounds[0].rows = 1000;
+  loaded.rounds[0].rewardStickerEnabled = true;
+  loaded.rounds[0].rewardStickerMode = "selected";
+  loaded.rounds[0].rewardStickerId = "gioi-qua";
   await api(`/api/games/${game.id}`, {
     method: "PUT",
     body: JSON.stringify(loaded),
@@ -59,5 +62,8 @@ test("legacy games retain completion text and zero or large grids can be saved",
   assert.equal(updated.rounds[0].completionText, "Giỏi quá");
   assert.equal(updated.rounds[0].completionImagePath, "reward.webp");
   assert.equal(updated.rounds[0].rows, 1000);
+  assert.equal(updated.rounds[0].rewardStickerEnabled, true);
+  assert.equal(updated.rounds[0].rewardStickerMode, "selected");
+  assert.equal(updated.rounds[0].rewardStickerId, "gioi-qua");
   await api(`/api/games/${game.id}`, { method: "DELETE" });
 });

@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Check, Hand } from "lucide-react";
 import type { Round } from "@/types/game";
 import {
+  effectiveRows,
   pieceCount,
   formatCount,
   permutation,
@@ -53,7 +54,7 @@ export default function PuzzleBoard({
   return (
     <PlayableBoard
       key={`${round.id}-${round.rows}-${round.columns}`}
-      round={round}
+      round={{ ...round, rows: effectiveRows(round.rows) }}
       count={count}
       onCorrect={onCorrect}
       onComplete={onComplete}

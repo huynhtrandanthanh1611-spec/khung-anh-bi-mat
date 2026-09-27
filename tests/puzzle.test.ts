@@ -22,7 +22,7 @@ test("huge grids count precisely and generate only requested pieces", () => {
   assert.equal(count, 1000000000000000000n);
   const fn = permutation(count, new Uint32Array([77, 123]));
   assert.ok(fn(count - 1n) < count);
-  assert.equal(pieceCount(0, 100), 0n);
+  assert.equal(pieceCount(0, 100), 100n);
 });
 test("1x1, 1xN and Nx1 backgrounds have no division by zero", () => {
   for (const [r, c] of [
@@ -40,9 +40,18 @@ test("pointer drop snaps near correct cell without accepting distant cells", () 
   assert.ok(nearCorrectSlot(215, 100, rect, 0n, 2, 2));
   assert.ok(!nearCorrectSlot(350, 170, rect, 0n, 2, 2));
 });
-test("zero grids stop play with a helpful message", () => {
+test("zero rows play as vertical strips; zero columns block play", () => {
   const g = { rounds: [{ rows: 0, columns: 4, imageUrl: "image" }] } as Game;
-  assert.match(playableError(g)!, /số hàng/);
+  for (const columns of [1, 2, 5, 20, 100]) {
+    g.rounds[0].columns = columns;
+    assert.equal(playableError(g), null);
+    assert.equal(pieceCount(0, columns), BigInt(columns));
+    assert.equal(g.rounds[0].rows, 0);
+    assert.deepEqual(
+      pieceStyle(0n, 0, columns, "image"),
+      pieceStyle(0n, 1, columns, "image"),
+    );
+  }
   g.rounds[0].rows = 1;
   g.rounds[0].columns = 0;
   assert.match(playableError(g)!, /số cột/);

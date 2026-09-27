@@ -1728,3 +1728,141 @@ button svg {
     scroll-behavior: auto !important;
   }
 }
+.column-note {
+  text-align: center;
+  color: #267d78;
+  margin: -8px 0 14px;
+  font-weight: 700;
+}
+.image-drop-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 12px;
+  border: 2px dashed #a4cec6;
+  border-radius: 18px;
+  background: #f6fcfa;
+  text-align: center;
+  cursor: text;
+}
+.image-drop-zone span {
+  font-size: 13px;
+  color: #52726b;
+}
+.image-drop-zone:focus,
+.image-drop-zone:focus-within,
+.image-drop-zone.dragging {
+  outline: 3px solid #f5bd52;
+  outline-offset: 2px;
+  background: #fff8df;
+}
+.sticker-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  margin-top: 16px;
+}
+.sticker-toggle input,
+.sticker-settings input {
+  width: 20px;
+  height: 20px;
+  accent-color: #267d78;
+}
+.sticker-settings {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+}
+.sticker-settings label {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.sticker-library {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.sticker-library button {
+  border: 2px solid #e3e8df;
+  background: white;
+  border-radius: 14px;
+  padding: 6px;
+  cursor: pointer;
+}
+.sticker-library button[aria-pressed="true"] {
+  border-color: #25877d;
+  background: #e7f6ef;
+  box-shadow: 0 0 0 2px #b9e1ce;
+}
+.sticker-library img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: contain;
+}
+.sticker-library span {
+  font-size: 12px;
+  display: block;
+  font-weight: 700;
+}
+.reward-content {
+  width: min(900px, 90vw);
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 12px;
+}
+.reward-sticker {
+  width: min(32vh, 280px);
+  height: min(32vh, 280px);
+  object-fit: contain;
+  flex-shrink: 0;
+  animation: sticker-pop 0.65s ease-out both;
+}
+.sticker-only .reward-sticker {
+  width: min(55vh, 500px);
+  height: min(55vh, 500px);
+}
+.reward-content .completion-text {
+  flex-shrink: 0;
+  margin: 0;
+  max-height: none;
+  overflow: visible;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.reward-content .completion-image {
+  flex-shrink: 0;
+  max-height: 28vh;
+  object-fit: contain;
+}
+.phase-reward .celebration {
+  min-height: 0;
+}
+.phase-reward .game-button {
+  flex-shrink: 0;
+}
+@keyframes sticker-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.6) rotate(-5deg);
+  }
+  65% {
+    opacity: 1;
+    transform: scale(1.07) rotate(2deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reward-sticker {
+    animation: none;
+  }
+}

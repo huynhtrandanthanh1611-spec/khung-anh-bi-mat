@@ -60,6 +60,8 @@ export async function hydrate(game: Game): Promise<Game> {
     rounds: await Promise.all(
       game.rounds.map(async (r) => ({
         ...r,
+        rewardStickerEnabled: r.rewardStickerEnabled ?? false,
+        rewardStickerMode: r.rewardStickerMode ?? "random",
         completionText: r.completionText ?? r.completionMessage ?? "",
         completionImagePath: r.completionImagePath ?? null,
         imageUrl: (await assetUrl(r.imagePath)) || undefined,
@@ -148,7 +150,8 @@ async function upload(id: string, form: FormData) {
 }
 async function save(id: string, body: string) {
   const parsed = saveSchema.safeParse(JSON.parse(body));
-  if (!parsed.success) throw Error("Hãy kiểm tra tên trò chơi và số hàng, số cột trước khi lưu.");
+  if (!parsed.success)
+    throw Error("Hãy kiểm tra tên trò chơi và số hàng, số cột trước khi lưu.");
   const input = parsed.data;
   const db = await database();
   return new Promise<{ version: number; updatedAt: string }>(

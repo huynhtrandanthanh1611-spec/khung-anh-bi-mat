@@ -8,6 +8,9 @@ export type Round = {
   hint: string;
   completionMessage: string;
   completionText?: string;
+  rewardStickerEnabled?: boolean;
+  rewardStickerMode?: "random" | "selected";
+  rewardStickerId?: string;
   completionImagePath?: string | null;
   completionImageUrl?: string | null;
   rows: number;

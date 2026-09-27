@@ -34,3 +34,7 @@ npm run build
 ```
 
 GitHub Actions build thư mục `dist/` rồi triển khai GitHub Pages khi push `main`. Đường dẫn dùng HashRouter. Không cần API key hay biến môi trường.
+
+### Hàng bằng 0 và phần thưởng
+
+0 hàng nghĩa là chỉ chia theo cột; ví dụ 0×5 tạo 5 mảnh dọc. Giá trị 0 được giữ nguyên khi lưu. Mỗi vòng có lời nhắn tự nhập, ảnh của cô (chọn tệp, kéo thả hoặc click vùng ảnh rồi Ctrl+V), và sticker tùy chọn. Sticker ngẫu nhiên tránh lặp hai vòng liền nhau; có thể chọn cố định. Ảnh clipboard phải là dữ liệu ảnh, không phải đường dẫn hoặc văn bản URL.
