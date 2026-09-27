@@ -1,6 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
   Check,
@@ -22,7 +22,9 @@ import RoundCard from "./RoundCard";
 import ShareDialog from "./ShareDialog";
 import StudentGame, { toPreview } from "@/components/student/StudentGame";
 type Upload = { path: string; url: string; width: number; height: number };
-export default function GameEditor({ id }: { id: string }) {
+export default function GameEditor() {
+  const [searchParams] = useSearchParams();
+  const id = searchParams.get("id") || "";
   const { game, error, setError, status, change, flush, serverChange } =
       useDraft(id),
     [busy, setBusy] = useState(false),
@@ -32,7 +34,7 @@ export default function GameEditor({ id }: { id: string }) {
     [selected, setSelected] = useState<string | null>(null);
   const photos = useRef<HTMLInputElement>(null),
     audio = useRef<HTMLInputElement>(null);
-  const router = useRouter();
+  const navigate = useNavigate();
   function patch(value: Partial<Game>) {
     change((g) => ({ ...g, ...value }));
   }
@@ -177,7 +179,7 @@ export default function GameEditor({ id }: { id: string }) {
           onClick={() =>
             run(async () => {
               await flush();
-              router.push("/teacher");
+              navigate("/teacher");
             })
           }
         >
@@ -220,7 +222,7 @@ export default function GameEditor({ id }: { id: string }) {
             onClick={() => publish(true)}
           >
             <Send size={17} />
-            {game.status === "published" ? "Cập nhật bản xuất bản" : "Xuất bản"}
+            {game.status === "published" ? "Gửi trò chơi" : "Gửi trò chơi"}
           </button>
         </div>
       </div>
@@ -237,17 +239,41 @@ export default function GameEditor({ id }: { id: string }) {
       <div className="editor-layout">
         <aside className="editor-nav">
           <span className="eyebrow">NỘI DUNG</span>
-          <a href="#info">
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              document.getElementById("info")?.scrollIntoView();
+            }}
+          >
             01 <span>Thông tin</span>
           </a>
-          <a href="#rounds">
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              document.getElementById("rounds")?.scrollIntoView();
+            }}
+          >
             02 <span>Các vòng chơi</span>
             <b>{game.rounds.length}</b>
           </a>
-          <a href="#music">
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              document.getElementById("music")?.scrollIntoView();
+            }}
+          >
             03 <span>Nhạc nền</span>
           </a>
-          <a href="#settings">
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              document.getElementById("settings")?.scrollIntoView();
+            }}
+          >
             04 <span>Cài đặt</span>
           </a>
           <div className="round-count">
@@ -275,7 +301,7 @@ export default function GameEditor({ id }: { id: string }) {
                 Tạm ẩn trò chơi
               </button>
               <p className="small muted">
-                Sửa bản nháp rồi bấm “Cập nhật bản xuất bản” để học sinh thấy
+                Sửa bản nháp rồi bấm “Gửi trò chơi” để học sinh thấy
                 nội dung mới.
               </p>
             </>
@@ -600,6 +626,7 @@ export default function GameEditor({ id }: { id: string }) {
       {share && (
         <ShareDialog
           title={game.title}
+          id={game.id}
           code={game.code}
           onClose={() => setShare(false)}
         />

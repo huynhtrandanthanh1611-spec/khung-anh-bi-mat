@@ -1,11 +1,11 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/client";
 export default function NewGame() {
   const [busy, setBusy] = useState(false),
     [error, setError] = useState("");
-  const router = useRouter();
+  const navigate = useNavigate();
   return (
     <main className="center-page">
       <h1>Tạo trò chơi mới</h1>
@@ -19,7 +19,7 @@ export default function NewGame() {
             const game = await api<{ id: string }>("/api/games", {
               method: "POST",
             });
-            router.replace(`/teacher/games/${game.id}/edit`);
+            navigate(`/teacher/edit?id=${game.id}`, { replace: true });
           } catch (e) {
             setError((e as Error).message);
             setBusy(false);

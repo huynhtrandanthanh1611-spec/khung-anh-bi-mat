@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { useNavigate, Link } from "react-router-dom";
 import {
   Plus,
   ImagePlus,
@@ -22,7 +21,7 @@ export default function Dashboard() {
     [busy, setBusy] = useState(false),
     [share, setShare] = useState<Game | null>(null),
     [preview, setPreview] = useState<Game | null>(null);
-  const router = useRouter();
+  const navigate = useNavigate();
   async function refresh() {
     setError("");
     try {
@@ -59,7 +58,7 @@ export default function Dashboard() {
           onClick={() =>
             action(async () => {
               const game = await api<Game>("/api/games", { method: "POST" });
-              router.push(`/teacher/games/${game.id}/edit`);
+              navigate(`/teacher/edit?id=${game.id}`);
             })
           }
         >
@@ -99,7 +98,7 @@ export default function Dashboard() {
                 <ImageIcon size={52} />
               )}
               <span className={`status ${g.status}`}>
-                {g.status === "published" ? "Đã xuất bản" : "Bản nháp"}
+                {g.status === "published" ? "Sẵn sàng chơi" : "Bản nháp"}
               </span>
             </div>
             <div className="card-body">
@@ -108,7 +107,7 @@ export default function Dashboard() {
                   "Trò chơi ghép ảnh"}
               </span>
               <h2>
-                <Link href={`/teacher/games/${g.id}/edit`}>{g.title}</Link>
+                <Link to={`/teacher/edit?id=${g.id}`}>{g.title}</Link>
               </h2>
               <p>
                 {g.rounds.filter((r) => r.enabled).length} / {g.rounds.length}{" "}
@@ -121,7 +120,7 @@ export default function Dashboard() {
               <div className="card-actions">
                 <Link
                   className="button secondary"
-                  href={`/teacher/games/${g.id}/edit`}
+                  to={`/teacher/edit?id=${g.id}`}
                 >
                   Chỉnh sửa
                 </Link>
@@ -158,7 +157,7 @@ export default function Dashboard() {
                         `/api/games/${g.id}/clone`,
                         { method: "POST" },
                       );
-                      router.push(`/teacher/games/${clone.id}/edit`);
+                      navigate(`/teacher/edit?id=${clone.id}`);
                     })
                   }
                 >
@@ -190,6 +189,7 @@ export default function Dashboard() {
       </div>
       {share && (
         <ShareDialog
+          id={share.id}
           code={share.code}
           title={share.title}
           onClose={() => setShare(null)}

@@ -1,90 +1,68 @@
-"use client";
-import { useEffect, useState } from "react";
-import QRCode from "qrcode";
-import { Copy, Download, ExternalLink } from "lucide-react";
+import { useState } from "react";
+import { Download, Copy } from "lucide-react";
 import { Modal } from "@/components/shared";
+import { exportGame } from "@/lib/client";
 export default function ShareDialog({
+  id,
   code,
   title,
   onClose,
 }: {
+  id: string;
   code: string;
   title: string;
   onClose: () => void;
 }) {
-  const [qr, setQr] = useState(""),
-    [message, setMessage] = useState("");
-  const url = `${window.location.origin}/play/${code}`;
-  useEffect(() => {
-    QRCode.toDataURL(url, {
-      width: 600,
-      margin: 2,
-      errorCorrectionLevel: "M",
-      color: { dark: "#0d2947", light: "#ffffff" },
-    })
-      .then(setQr)
-      .catch(() =>
-        setMessage("Chưa tạo được mã QR. Bạn vẫn có thể sao chép đường dẫn."),
-      );
-  }, [url]);
-  async function copy(text: string) {
-    try {
-      await navigator.clipboard.writeText(text);
-      setMessage("Đã sao chép!");
-    } catch {
-      setMessage("Hãy chọn và sao chép đường dẫn bên dưới.");
-    }
-  }
+  const [message, setMessage] = useState("");
+  const url = window.location.origin + import.meta.env.BASE_URL;
   return (
-    <Modal title="Chia sẻ với học sinh" onClose={onClose}>
+    <Modal title="Gửi trò chơi" onClose={onClose}>
       <div className="share-panel">
-        <p>{title}</p>
-        {qr && (
-          <img
-            className="qr"
-            src={qr}
-            width={220}
-            height={220}
-            alt={`Mã QR trò chơi ${title}`}
-          />
-        )}
-        <span className="muted">Mã trò chơi</span>
-        <strong className="share-code">{code}</strong>
-        <button className="button secondary" onClick={() => copy(code)}>
-          <Copy size={18} />
-          Sao chép mã
+        <h3>{title}</h3>
+        <p>
+          Tải tệp trò chơi và gửi cho học sinh. Học sinh mở website, chọn “Mở
+          tệp trò chơi” rồi chọn tệp đã nhận.
+        </p>
+        <button
+          className="button primary"
+          onClick={async () => {
+            try {
+              const blob = await exportGame(id);
+              const href = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = href;
+              a.download = `khung-anh-${code}.json`;
+              a.click();
+              setTimeout(() => URL.revokeObjectURL(href), 1000);
+            } catch (e) {
+              setMessage((e as Error).message);
+            }
+          }}
+        >
+          <Download size={18} />
+          Tải tệp trò chơi
         </button>
         <label>
-          Đường dẫn trò chơi
-          <input readOnly value={url} onFocus={(e) => e.target.select()} />
+          Địa chỉ website
+          <input readOnly value={url} />
         </label>
-        <div className="button-row">
-          <button className="button primary" onClick={() => copy(url)}>
-            <Copy size={18} />
-            Sao chép link
-          </button>
-          {qr && (
-            <a
-              className="button secondary"
-              href={qr}
-              download={`khung-anh-${code}.png`}
-            >
-              <Download size={18} />
-              Tải QR
-            </a>
-          )}
-          <a
-            className="button ghost"
-            href={url}
-            target="_blank"
-            rel="noreferrer"
-          >
-            <ExternalLink size={18} />
-            Mở
-          </a>
-        </div>
+        <button
+          className="button secondary"
+          onClick={async () => {
+            try {
+              await navigator.clipboard.writeText(url);
+              setMessage("Đã sao chép địa chỉ website.");
+            } catch {
+              setMessage("Hãy sao chép địa chỉ ở trên.");
+            }
+          }}
+        >
+          <Copy size={18} />
+          Sao chép địa chỉ website
+        </button>
         <p className="small muted">
-          Học sinh mở link hoặc quét QR, không cần đăng nhập.
+          Ảnh và trò chơi được lưu trên trình duyệt này. Gửi kèm tệp trò chơi để
+          mở trên thiết bị khác. Hãy giữ tệp tải xuống để sao lưu.
         </p>
         {message && <p role="status">{message}</p>}
       </div>

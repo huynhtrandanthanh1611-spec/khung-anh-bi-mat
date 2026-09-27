@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import {
   Puzzle,
   Play,
@@ -285,7 +285,7 @@ export default function StudentGame({
               Chơi lại
             </button>
             {!preview && (
-              <Link href="/" className="button secondary">
+              <Link to="/" className="button secondary">
                 Về trang chủ
               </Link>
             )}

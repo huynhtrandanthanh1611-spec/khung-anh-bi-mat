@@ -1,22 +1,22 @@
 "use client";
 import { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { Link, useNavigate } from "react-router-dom";
 import { Puzzle, ArrowRight, GraduationCap, KeyRound } from "lucide-react";
+import { importGame } from "@/lib/client";
 export default function Home() {
   const [code, setCode] = useState(""),
     [error, setError] = useState("");
-  const router = useRouter();
+  const navigate = useNavigate();
   return (
     <div className="home">
       <header className="site-header">
-        <Link href="/" className="brand">
+        <Link to="/" className="brand">
           <span className="brand-icon">
             <Puzzle />
           </span>
           Khung ảnh bí mật
         </Link>
-        <Link className="button ghost" href="/teacher">
+        <Link className="button ghost" to="/teacher">
           <GraduationCap size={20} />
           Dành cho giáo viên
         </Link>
@@ -48,7 +48,7 @@ export default function Home() {
                 setError("Mã trò chơi gồm 8 chữ cái hoặc chữ số.");
                 return;
               }
-              router.push(`/play/${value}`);
+              navigate(`/play/${value}`);
             }}
           >
             <label htmlFor="game-code">Mã trò chơi</label>
@@ -73,7 +73,31 @@ export default function Home() {
               Tham gia <ArrowRight size={19} />
             </button>
           </form>
-          <p className="muted small">Không cần tài khoản. Sẵn sàng khám phá!</p>
+          <label className="button secondary wide">
+            Mở tệp trò chơi
+            <input
+              type="file"
+              accept=".json,application/json"
+              style={{ display: "none" }}
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                try {
+                  setError("");
+                  const importedCode = await importGame(file);
+                  navigate(`/play/${importedCode}`);
+                } catch (err) {
+                  setError((err as Error).message);
+                } finally {
+                  e.target.value = "";
+                }
+              }}
+            />
+          </label>
+          <p className="muted small">
+            Nhận tệp trò chơi từ thầy cô để chơi trên thiết bị của em. Mã chỉ mở
+            trò chơi đã lưu trên trình duyệt này.
+          </p>
         </section>
       </main>
       <footer className="home-footer">Mỗi mảnh ghép, một điều thú vị.</footer>
