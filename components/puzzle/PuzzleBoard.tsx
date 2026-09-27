@@ -9,6 +9,7 @@ import {
   pieceStyle,
   nearCorrectSlot,
 } from "@/lib/puzzle";
+import { drawPuzzleBoard } from "@/lib/drawPuzzleBoard";
 const PAGE = 12n;
 function PieceArt({ piece, round }: { piece: bigint; round: Round }) {
   const clip = useId().replace(/:/g, "");
@@ -87,6 +88,7 @@ function PlayableBoard({
     [loaded, setLoaded] = useState<HTMLImageElement | null>(null),
     [broken, setBroken] = useState(false),
     [focus, setFocus] = useState(0n),
+    [hovered, setHovered] = useState<bigint | null>(null),
     [bump, setBump] = useState(false);
   const area = useRef<HTMLDivElement>(null),
     board = useRef<HTMLDivElement>(null),
@@ -106,8 +108,7 @@ function PlayableBoard({
     { length: Number(count - page * PAGE < PAGE ? count - page * PAGE : PAGE) },
     (_, i) => order(page * PAGE + BigInt(i)),
   );
-  const ratio = round.width / round.height,
-    pieceRatio = (ratio * round.rows) / round.columns;
+  const ratio = round.width / round.height;
   useEffect(() => {
     const el = area.current;
     if (!el) return;
@@ -145,48 +146,26 @@ function PlayableBoard({
     el.width = Math.round(size.width * dpr);
     el.height = Math.round(size.height * dpr);
     ctx.scale(dpr, dpr);
-    ctx.fillStyle = "#fffdf4";
-    ctx.fillRect(0, 0, size.width, size.height);
-    ctx.globalAlpha = 0.12;
-    ctx.drawImage(loaded, 0, 0, size.width, size.height);
-    ctx.globalAlpha = 1;
-    const w = size.width / round.columns,
-      h = size.height / round.rows,
-      sw = loaded.naturalWidth / round.columns,
-      sh = loaded.naturalHeight / round.rows;
-    for (const p of placed) {
-      const x = Number(p % BigInt(round.columns)),
-        y = Number(p / BigInt(round.columns));
-      ctx.drawImage(loaded, x * sw, y * sh, sw, sh, x * w, y * h, w, h);
-    }
-    ctx.strokeStyle = "#c8dfe7";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    const colStep = Math.max(
-        1,
-        Math.ceil(round.columns / Math.max(1, Math.floor(size.width / 3))),
-      ),
-      rowStep = Math.max(
-        1,
-        Math.ceil(round.rows / Math.max(1, Math.floor(size.height / 3))),
-      );
-    for (let c = 0; c <= round.columns; c += colStep) {
-      ctx.moveTo(c * w, 0);
-      ctx.lineTo(c * w, size.height);
-    }
-    for (let r = 0; r <= round.rows; r += rowStep) {
-      ctx.moveTo(0, r * h);
-      ctx.lineTo(size.width, r * h);
-    }
-    ctx.stroke();
-    if (selected !== null) {
-      const x = Number(focus % BigInt(round.columns)),
-        y = Number(focus / BigInt(round.columns));
-      ctx.strokeStyle = "#e89e35";
-      ctx.lineWidth = 3;
-      ctx.strokeRect(x * w, y * h, w, h);
-    }
-  }, [loaded, placed, size, round.rows, round.columns, focus, selected]);
+    drawPuzzleBoard(
+      ctx,
+      loaded,
+      placed,
+      round.rows,
+      round.columns,
+      size,
+      hovered ?? (selected !== null ? focus : null),
+    );
+  }, [
+    loaded,
+    placed,
+    size,
+    round.rows,
+    round.columns,
+    focus,
+    selected,
+    hovered,
+  ]);
+
   function place(piece: bigint, slot: bigint) {
     if (
       done.current ||
@@ -244,7 +223,7 @@ function PlayableBoard({
       <div className="board-area" ref={area}>
         <div
           ref={board}
-          className={`puzzle-board ${bump ? "gentle-bump" : ""}`}
+          className={`puzzle-board ${bump ? "gentle-bump" : ""} ${ghost ? "drag-active" : ""}`}
           style={{ width: size.width, height: size.height }}
         >
           {count <= 144n ? (
@@ -260,7 +239,7 @@ function PlayableBoard({
                 return (
                   <button
                     key={i}
-                    className={`puzzle-cell ${placed.has(p) ? "placed" : ""} ${selected !== null ? "ready" : ""}`}
+                    className={`puzzle-cell ${placed.has(p) ? "placed" : ""} ${selected !== null ? "ready" : ""} ${hovered === p && !placed.has(p) ? "drop-target" : ""}`}
                     aria-label={`Ô hàng ${Math.floor(i / round.columns) + 1}, cột ${(i % round.columns) + 1}${placed.has(p) ? ", đã ghép" : ""}`}
                     disabled={placed.has(p)}
                     onClick={() => {
@@ -268,15 +247,17 @@ function PlayableBoard({
                       else setFeedback("Con chọn một mảnh ảnh trước nhé!");
                     }}
                   >
-                    <span
-                      className="cell-image"
-                      style={pieceStyle(
-                        p,
-                        round.rows,
-                        round.columns,
-                        round.imageUrl!,
-                      )}
-                    />
+                    {placed.has(p) && (
+                      <span
+                        className="cell-image"
+                        style={pieceStyle(
+                          p,
+                          round.rows,
+                          round.columns,
+                          round.imageUrl!,
+                        )}
+                      />
+                    )}
                     {!placed.has(p) && <span className="cell-dot" />}
                   </button>
                 );
@@ -314,7 +295,7 @@ function PlayableBoard({
       <section className="pieces-area" aria-label="Các mảnh ghép">
         <div className="tray-title">
           <span>
-            <Hand size={20} />
+            <Hand size={24} />
             Mảnh ghép của con
           </span>
           <small>
@@ -330,7 +311,7 @@ function PlayableBoard({
             ) : (
               <button
                 key={p.toString()}
-                className={`puzzle-piece ${selected === p ? "selected" : ""}`}
+                className={`puzzle-piece ${selected === p ? "selected" : ""} ${ghost?.piece === p ? "is-dragging" : ""}`}
                 aria-label={`Mảnh ghép ${p + 1n}`}
                 aria-pressed={selected === p}
                 onClick={() => {
@@ -343,6 +324,7 @@ function PlayableBoard({
                 }}
                 onPointerDown={(e) => {
                   ignoreClick.current = false;
+                  setSelected(p);
                   drag.current = {
                     piece: p,
                     x: e.clientX,
@@ -356,17 +338,30 @@ function PlayableBoard({
                   if (!d) return;
                   if (Math.hypot(e.clientX - d.x, e.clientY - d.y) > 7)
                     d.moved = true;
-                  if (d.moved)
+                  if (d.moved) {
                     setGhost({ piece: p, x: e.clientX, y: e.clientY });
+                    const rect =
+                      board.current!.firstElementChild!.getBoundingClientRect();
+                    setHovered(
+                      e.clientX >= rect.left &&
+                        e.clientX <= rect.right &&
+                        e.clientY >= rect.top &&
+                        e.clientY <= rect.bottom
+                        ? canvasSlot(e.clientX, e.clientY)
+                        : null,
+                    );
+                  }
                 }}
                 onPointerCancel={() => {
                   drag.current = null;
                   setGhost(null);
+                  setHovered(null);
                 }}
                 onPointerUp={(e) => {
                   const d = drag.current;
                   drag.current = null;
                   setGhost(null);
+                  setHovered(null);
                   if (!d?.moved) return;
                   ignoreClick.current = true;
                   setSelected(p);

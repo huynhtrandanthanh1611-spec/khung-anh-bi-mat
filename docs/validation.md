@@ -18,3 +18,7 @@
 ## Cập nhật phần thưởng
 
 17 bài kiểm tra tự động đạt; build TypeScript/Vite đạt. Kiểm tra số mảnh và khả năng bắt đầu cho 0×1, 0×2, 0×5, 0×20, 0×100; số cột 0 vẫn chặn chơi. Kiểm tra sticker cố định, ngẫu nhiên tránh lặp, giá trị mặc định và lưu/đọc lại tùy chọn qua IndexedDB. Bộ sticker sử dụng 5 ảnh khác nhau do người dùng cung cấp; hai tệp mặt trời giống nhau được gộp.
+
+## Game Mode: che đáp án và tăng độ rõ
+
+19 bài kiểm tra đạt. Kiểm tra hồi quy HTML lưới 0×5, 2×5, 1×1 không chứa ảnh trong ô chưa ghép; canvas 1×200 và 20×20 không vẽ ảnh gốc khi chưa ghép, chỉ vẽ crop của mảnh đã đặt. Build GitHub Pages đạt. Font Baloo 2 800 và Nunito 700 tự lưu kèm giấy phép OFL, kiểm tra glyph tiếng Việt đầy đủ.

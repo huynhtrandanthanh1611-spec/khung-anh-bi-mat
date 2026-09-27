@@ -1113,7 +1113,6 @@ button svg {
 .cell-image {
   position: absolute;
   inset: 0;
-  opacity: 0.13;
   background-repeat: no-repeat;
 }
 .puzzle-cell.placed {
@@ -1864,5 +1863,289 @@ button svg {
 @media (prefers-reduced-motion: reduce) {
   .reward-sticker {
     animation: none;
+  }
+}
+
+/* Game-only typography and contrast. Font files are served with the app. */
+@font-face {
+  font-family: "Baloo 2";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("/fonts/baloo2-800.woff") format("woff");
+}
+@font-face {
+  font-family: "Nunito";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/nunito-700.woff") format("woff");
+}
+.game-mode {
+  font-family: "Nunito", ui-rounded, sans-serif;
+  font-weight: 700;
+  color: #234f56;
+}
+.game-mode button {
+  font-family: inherit;
+  font-weight: 800;
+}
+.game-mode h1,
+.game-mode .tray-title > span,
+.game-mode .round-pill,
+.game-mode .completion-text,
+.game-mode .game-button {
+  font-family: "Baloo 2", "Nunito", ui-rounded, sans-serif;
+  font-weight: 800;
+}
+.game-mode .play-heading h1 {
+  color: #205c62;
+  font-size: clamp(28px, 3vw, 42px);
+  letter-spacing: 0.2px;
+  line-height: 1.15;
+  text-shadow: 0 2px 0 #fff;
+}
+.game-mode .round-pill {
+  color: #285b60;
+  background: #fffdf5;
+  font-size: 16px;
+  letter-spacing: 0.8px;
+  border: 1px solid #b8d6cf;
+  padding: 5px 18px;
+}
+.game-mode .quiet-exit {
+  color: #315f65;
+  background: #fffef8;
+  font-size: 15px;
+  border: 2px solid #b3d1cd;
+  border-radius: 18px;
+  padding: 10px 14px;
+  box-shadow: 0 3px 0 #adcac5;
+}
+.game-mode .quiet-exit svg {
+  width: 21px;
+  height: 21px;
+}
+.game-mode .round-control {
+  color: #245f66;
+  background: #fffef8;
+  border: 2px solid #9abeb8;
+  box-shadow:
+    0 3px 0 #92b7b2,
+    0 5px 12px #24565a14;
+}
+.game-mode .puzzle-board {
+  border-color: #6bada6;
+  border-radius: 24px;
+  box-shadow:
+    0 7px 0 #4d8b86,
+    0 14px 26px #2b6b6926;
+  background: #fffdf4;
+}
+.game-mode .board-grid {
+  gap: 2px;
+  background: #79aaa5;
+}
+.game-mode .puzzle-cell {
+  background: #fffdf4;
+  border-radius: 2px;
+}
+.game-mode .cell-dot {
+  background: #90b6ac;
+  width: 8px;
+  height: 8px;
+}
+.game-mode .puzzle-cell.ready:hover,
+.game-mode .puzzle-cell.drop-target {
+  background: #ffe6a5;
+  box-shadow: inset 0 0 0 3px #cf952d;
+}
+.game-mode .puzzle-board.drag-active {
+  border-color: #3b8981;
+  box-shadow:
+    0 7px 0 #3b7771,
+    0 0 0 5px #b7e1d780,
+    0 14px 26px #2b6b6930;
+}
+.game-mode .pieces-area {
+  background: #fffdf8;
+  border: 3px solid #83b7af;
+  border-radius: 26px;
+  box-shadow:
+    0 6px 0 #a2c7bc,
+    0 12px 24px #30595120;
+  padding: 18px;
+  gap: 16px;
+}
+.game-mode .tray-title {
+  flex-wrap: wrap;
+}
+.game-mode .tray-title > span {
+  color: #245b61;
+  font-size: clamp(19px, 1.65vw, 25px);
+  gap: 8px;
+  line-height: 1.2;
+}
+.game-mode .tray-title small {
+  color: #24575b;
+  background: #e5f3ed;
+  border: 1px solid #b4d4c5;
+  border-radius: 12px;
+  padding: 4px 9px;
+  font-size: 16px;
+  font-weight: 900;
+}
+.game-mode .piece-tray {
+  gap: 14px;
+  padding: 5px;
+  overflow: auto;
+}
+.game-mode .puzzle-piece {
+  background: #f1f7ee;
+  border: 3px solid #61978e;
+  border-radius: 14px;
+  box-shadow:
+    0 4px 0 #aac7bc,
+    0 5px 9px #234f5630;
+  min-height: 64px;
+}
+.game-mode .puzzle-piece:hover,
+.game-mode .puzzle-piece:active {
+  transform: translateY(-3px) scale(1.04);
+  border-color: #327e75;
+}
+.game-mode .puzzle-piece.selected {
+  border-color: #bc7a12;
+  background: #fff0c9;
+  box-shadow:
+    0 0 0 3px #ffd170,
+    0 5px 0 #ba9250;
+  transform: translateY(-2px) scale(1.04);
+}
+.game-mode .puzzle-piece.is-dragging {
+  opacity: 0.6;
+  transform: scale(0.96);
+}
+.game-mode .piece-placeholder {
+  color: #4a8c74;
+  border-color: #a4c8b7;
+  background: #eff6ed;
+}
+.game-mode .drag-ghost {
+  width: 120px;
+  height: 120px;
+  border: 4px solid #d89a2a;
+  box-shadow: 0 16px 28px #194b5b50;
+  transform: translate(-50%, -55%) rotate(3deg) scale(1.06);
+}
+.game-mode .tray-pages {
+  color: #315e62;
+  font-size: 15px;
+  font-weight: 800;
+}
+.game-mode .game-feedback {
+  color: #23575e;
+  font-size: clamp(16px, 1.6vw, 21px);
+  line-height: 1.3;
+  font-weight: 800;
+}
+.game-mode .puzzle-layout {
+  grid-template-rows: minmax(0, 1fr) 42px;
+}
+.game-mode .completion-text {
+  color: #245d62;
+}
+.game-mode button:focus-visible,
+.game-mode canvas:focus-visible {
+  outline: 3px solid #c37f15;
+  outline-offset: 4px;
+}
+@media (max-width: 700px) {
+  .game-mode .play-heading h1 {
+    font-size: 28px;
+  }
+  .game-mode .quiet-exit {
+    font-size: 13px;
+    padding: 7px 9px;
+    top: 10px;
+    right: 10px;
+  }
+  .game-mode .round-pill {
+    font-size: 14px;
+  }
+  .game-mode .puzzle-layout {
+    grid-template-rows: minmax(0, 1fr) minmax(155px, 34%) 42px;
+  }
+  .game-mode .pieces-area {
+    padding: 10px;
+    gap: 8px;
+  }
+  .game-mode .tray-title > span {
+    font-size: 19px;
+  }
+  .game-mode .tray-title small {
+    font-size: 14px;
+    padding: 2px 7px;
+  }
+  .game-mode .piece-tray {
+    gap: 8px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-auto-rows: minmax(52px, 1fr);
+  }
+  .game-mode .puzzle-piece,
+  .game-mode .piece-placeholder {
+    min-height: 52px;
+  }
+  .game-mode .tray-pages {
+    position: static;
+    max-width: none;
+    font-size: 13px;
+  }
+  .game-mode .puzzle-board {
+    border-radius: 18px;
+  }
+}
+@media (max-height: 550px) {
+  .game-mode .play-heading h1 {
+    display: block;
+    font-size: 25px;
+    margin: 2px 0 0;
+  }
+  .game-mode .round-pill {
+    font-size: 12px;
+    padding: 2px 12px;
+  }
+  .game-mode .play-screen {
+    gap: 6px;
+  }
+  .game-mode .puzzle-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(230px, 34%);
+    grid-template-rows: minmax(0, 1fr) 32px;
+  }
+  .game-mode .pieces-area {
+    height: auto;
+    padding: 9px;
+    gap: 8px;
+  }
+  .game-mode .tray-title {
+    display: flex;
+  }
+  .game-mode .tray-title > span {
+    font-size: 18px;
+  }
+  .game-mode .tray-title small {
+    font-size: 13px;
+    padding: 2px 6px;
+  }
+  .game-mode .piece-tray {
+    gap: 8px;
+    grid-auto-rows: minmax(48px, 1fr);
+  }
+  .game-mode .puzzle-piece,
+  .game-mode .piece-placeholder {
+    min-height: 48px;
+  }
+  .game-mode .game-feedback {
+    font-size: 15px;
   }
 }
