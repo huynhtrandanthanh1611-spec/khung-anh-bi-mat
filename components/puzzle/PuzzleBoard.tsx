@@ -442,35 +442,6 @@ function PlayableBoard({
             </button>
           </div>
         )}
-        <section
-          className="selected-piece-preview"
-          aria-label="Xem lớn mảnh đang chọn"
-        >
-          <h2>
-            {selected !== null
-              ? "Mảnh con đang chọn"
-              : "Cùng nhìn thật rõ nhé!"}
-          </h2>
-          <div
-            className="selected-piece-art"
-            role="img"
-            aria-label={
-              selected !== null
-                ? `Mảnh ghép ${selected + 1n} phóng to`
-                : "Chọn một mảnh để xem lớn"
-            }
-          >
-            {selected !== null ? (
-              <PieceArt piece={selected} round={round} />
-            ) : (
-              <p>
-                Chạm vào một mảnh ở trên
-                <br />
-                để xem lớn tại đây.
-              </p>
-            )}
-          </div>
-        </section>
       </section>
       <p className="game-feedback" role="status">
         {feedback}
