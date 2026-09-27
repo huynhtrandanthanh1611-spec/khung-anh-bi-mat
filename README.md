@@ -1,19 +1,30 @@
 # Khung ảnh bí mật
 
-Website ghép ảnh dành cho lớp học, chạy tĩnh bằng React + Vite trên GitHub Pages.
+Trò chơi ghép ảnh cho lớp mầm non, dùng trực tiếp trên máy của giáo viên.
 
-## Sử dụng
+Website: https://huynhtrandanthanh1611-spec.github.io/khung-anh-bi-mat/
 
-- Vào **Dành cho giáo viên** để tạo trò chơi, thêm ảnh, chia lưới và đặt thời gian.
-- Dữ liệu và ảnh được lưu trong IndexedDB của trình duyệt hiện tại. Không cần tài khoản hoặc dịch vụ cơ sở dữ liệu.
-- Chọn **Gửi trò chơi → Tải tệp trò chơi** để sao lưu và gửi cho học sinh.
-- Học sinh mở website, chọn **Mở tệp trò chơi**, rồi chọn tệp JSON đã nhận.
-- Mã trò chơi chỉ mở dữ liệu đã có trong trình duyệt này. Địa chỉ website không tự đồng bộ trò chơi sang thiết bị khác.
-- Xóa dữ liệu trình duyệt có thể xóa bản lưu cục bộ; giữ tệp trò chơi đã tải xuống để khôi phục.
+## Cách dùng
+
+1. Chọn **Tạo trò chơi**, đặt tên và **Thêm ảnh**. Một ảnh là một vòng.
+2. Chỉnh số hàng/cột. Có thể thêm lời nhắn, ảnh chúc mừng và nhạc MP3.
+3. Bấm **BẮT ĐẦU TRÒ CHƠI**. Toàn bộ màn hình chuyển sang trò chơi.
+4. Kéo mảnh hoặc chạm mảnh rồi chạm ô. Hoàn thành vòng thì bấm **Tiếp tục**.
+5. Nút **Thoát** ở góc trên yêu cầu xác nhận trước khi quay lại chỉnh sửa.
+
+Không có mã tham gia, chia sẻ, trang học sinh, điểm số hay quy trình xuất bản trò chơi. Website không dùng Supabase hay đăng nhập trực tuyến. Dữ liệu tự lưu trong IndexedDB trên trình duyệt đang dùng; xóa dữ liệu trình duyệt có thể xóa trò chơi.
+
+## Hàng và cột
+
+Input nhận số nguyên từ 0, không có mức tối đa cố định trong giao diện. 0 là chưa thiết lập và không cho bắt đầu. Số cần biểu diễn chính xác bằng kiểu số của JavaScript. Tổng mảnh dùng BigInt; lưới lớn chỉ hiện cảnh báo, không sửa giá trị đã nhập. Khay hiển thị tối đa 12 mảnh mỗi trang; lưới lớn dùng canvas để tránh hàng nghìn nút trên màn hình. Lưới cực lớn có các ô rất nhỏ nên không phù hợp để trẻ thao tác.
+
+## Dữ liệu cũ
+
+Giữ nguyên tên database `khung-anh-bi-mat`, version 1 và các store `games`, `assets`. `completionMessage` cũ được đọc thành `completionText` khi trường mới chưa tồn tại. Ảnh chúc mừng mặc định trống. Không xóa hay tạo lại database. Xem `docs/architecture.md`.
 
 ## Phát triển
 
-Yêu cầu Node.js 22 trở lên.
+Node.js 22 trở lên:
 
 ```sh
 npm ci
@@ -22,18 +33,4 @@ npm test
 npm run build
 ```
 
-Bản build nằm trong `dist/`. Không cần biến môi trường hay khóa API.
-
-## GitHub Pages
-
-Workflow `.github/workflows/pages.yml` kiểm tra và build nhánh `main`. Deploy hiện chỉ chạy khi kho công khai; kho riêng tư cần gói GitHub hỗ trợ Pages.
-
-1. Trong Settings → Pages, chọn Source: **GitHub Actions**.
-2. Vào Actions → Build and deploy GitHub Pages → Run workflow.
-3. Địa chỉ website xuất hiện khi job deploy thành công.
-
-Router sử dụng phần `#` trong URL nên tải lại trang con hoạt động trên hosting tĩnh. Base path được đặt theo tên kho `khung-anh-bi-mat` trong `vite.config.ts`.
-
-## Trạng thái
-
-Bản tĩnh không dùng Supabase, API máy chủ hoặc đăng nhập trực tuyến. Xem `docs/validation.md` để biết phần đã kiểm tra. Tệp `docs/original-requirements.txt` lưu yêu cầu ban đầu; các chức năng tài khoản và đồng bộ trực tuyến trong yêu cầu đó không có trong bản tĩnh này.
+GitHub Actions build thư mục `dist/` rồi triển khai GitHub Pages khi push `main`. Đường dẫn dùng HashRouter. Không cần API key hay biến môi trường.

@@ -1,49 +1,202 @@
-"use client";
-import { useRef, useState } from "react";
-import { Check, Lightbulb } from "lucide-react";
-import type { PlayRound } from "@/types/game";
-import { shufflePieces, pieceBackground } from "@/lib/rules";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight, Check, Hand } from "lucide-react";
+import type { Round } from "@/types/game";
+import {
+  pieceCount,
+  formatCount,
+  permutation,
+  pieceStyle,
+  nearCorrectSlot,
+} from "@/lib/puzzle";
+const PAGE = 12n;
+function PieceArt({ piece, round }: { piece: bigint; round: Round }) {
+  const clip = useId().replace(/:/g, "");
+  const w = round.width / round.columns,
+    h = round.height / round.rows,
+    x = Number(piece % BigInt(round.columns)) * w,
+    y = Number(piece / BigInt(round.columns)) * h;
+  return (
+    <svg className="piece-art" viewBox={`0 0 ${w} ${h}`} aria-hidden="true">
+      <defs>
+        <clipPath id={clip}>
+          <rect width={w} height={h} />
+        </clipPath>
+      </defs>
+      <image
+        href={round.imageUrl}
+        x={-x}
+        y={-y}
+        width={round.width}
+        height={round.height}
+        clipPath={`url(#${clip})`}
+      />
+    </svg>
+  );
+}
+
 export default function PuzzleBoard({
   round,
-  onWrong,
   onCorrect,
   onComplete,
-  locked = false,
 }: {
-  round: PlayRound;
-  onWrong: () => void;
-  onCorrect: (count: number) => void;
+  round: Round;
+  onCorrect: () => void;
   onComplete: () => void;
-  locked?: boolean;
 }) {
-  const count = round.rows * round.columns;
-  const [order] = useState(() => shufflePieces(count)),
-    [placed, setPlaced] = useState<Set<number>>(new Set()),
-    [selected, setSelected] = useState<number | null>(null),
-    [feedback, setFeedback] = useState("Chọn một mảnh, rồi chọn ô cần đặt."),
+  const count = pieceCount(round.rows, round.columns);
+  if (count === 0n)
+    return (
+      <p className="game-feedback">
+        Vòng này chưa được thiết lập. Thầy cô hãy chọn số hàng và số cột.
+      </p>
+    );
+  return (
+    <PlayableBoard
+      key={`${round.id}-${round.rows}-${round.columns}`}
+      round={round}
+      count={count}
+      onCorrect={onCorrect}
+      onComplete={onComplete}
+    />
+  );
+}
+function PlayableBoard({
+  round,
+  count,
+  onCorrect,
+  onComplete,
+}: {
+  round: Round;
+  count: bigint;
+  onCorrect: () => void;
+  onComplete: () => void;
+}) {
+  const [placed, setPlaced] = useState(new Set<bigint>()),
+    [selected, setSelected] = useState<bigint | null>(null),
+    [page, setPage] = useState(0n),
+    [feedback, setFeedback] = useState(
+      "Chọn một mảnh, rồi chạm vào khung hình nhé!",
+    ),
     [ghost, setGhost] = useState<{
-      piece: number;
+      piece: bigint;
       x: number;
       y: number;
     } | null>(null),
-    [showHint, setShowHint] = useState(false),
-    [broken, setBroken] = useState(false);
-  const placedRef = useRef(new Set<number>()),
+    [size, setSize] = useState({ width: 600, height: 400 }),
+    [loaded, setLoaded] = useState<HTMLImageElement | null>(null),
+    [broken, setBroken] = useState(false),
+    [focus, setFocus] = useState(0n),
+    [bump, setBump] = useState(false);
+  const area = useRef<HTMLDivElement>(null),
+    board = useRef<HTMLDivElement>(null),
+    canvas = useRef<HTMLCanvasElement>(null),
+    placedRef = useRef(new Set<bigint>()),
     drag = useRef<{
-      piece: number;
+      piece: bigint;
       x: number;
       y: number;
       moved: boolean;
     } | null>(null),
-    ignoreClick = useRef(false);
+    ignoreClick = useRef(false),
+    done = useRef(false);
+  const order = useMemo(() => permutation(count), [count]),
+    lastPage = (count - 1n) / PAGE;
+  const pieces = Array.from(
+    { length: Number(count - page * PAGE < PAGE ? count - page * PAGE : PAGE) },
+    (_, i) => order(page * PAGE + BigInt(i)),
+  );
   const ratio = round.width / round.height,
     pieceRatio = (ratio * round.rows) / round.columns;
-  function place(piece: number, slot: number) {
-    if (locked || placedRef.current.has(piece) || placedRef.current.has(slot))
+  useEffect(() => {
+    const el = area.current;
+    if (!el) return;
+    const resize = () => {
+      const width = Math.max(
+        1,
+        Math.min(
+          Math.max(1, el.clientWidth - 30),
+          Math.max(1, el.clientHeight - 30) * ratio,
+        ),
+      );
+      setSize({ width, height: width / ratio });
+    };
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [ratio]);
+  useEffect(() => {
+    const img = new Image();
+    img.onload = () => setLoaded(img);
+    img.onerror = () => setBroken(true);
+    img.src = round.imageUrl || "";
+    return () => {
+      img.onload = null;
+      img.onerror = null;
+    };
+  }, [round.imageUrl]);
+  useEffect(() => {
+    const el = canvas.current;
+    if (!el || !loaded) return;
+    const ctx = el.getContext("2d");
+    if (!ctx) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    el.width = Math.round(size.width * dpr);
+    el.height = Math.round(size.height * dpr);
+    ctx.scale(dpr, dpr);
+    ctx.fillStyle = "#fffdf4";
+    ctx.fillRect(0, 0, size.width, size.height);
+    ctx.globalAlpha = 0.12;
+    ctx.drawImage(loaded, 0, 0, size.width, size.height);
+    ctx.globalAlpha = 1;
+    const w = size.width / round.columns,
+      h = size.height / round.rows,
+      sw = loaded.naturalWidth / round.columns,
+      sh = loaded.naturalHeight / round.rows;
+    for (const p of placed) {
+      const x = Number(p % BigInt(round.columns)),
+        y = Number(p / BigInt(round.columns));
+      ctx.drawImage(loaded, x * sw, y * sh, sw, sh, x * w, y * h, w, h);
+    }
+    ctx.strokeStyle = "#c8dfe7";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    const colStep = Math.max(
+        1,
+        Math.ceil(round.columns / Math.max(1, Math.floor(size.width / 3))),
+      ),
+      rowStep = Math.max(
+        1,
+        Math.ceil(round.rows / Math.max(1, Math.floor(size.height / 3))),
+      );
+    for (let c = 0; c <= round.columns; c += colStep) {
+      ctx.moveTo(c * w, 0);
+      ctx.lineTo(c * w, size.height);
+    }
+    for (let r = 0; r <= round.rows; r += rowStep) {
+      ctx.moveTo(0, r * h);
+      ctx.lineTo(size.width, r * h);
+    }
+    ctx.stroke();
+    if (selected !== null) {
+      const x = Number(focus % BigInt(round.columns)),
+        y = Number(focus / BigInt(round.columns));
+      ctx.strokeStyle = "#e89e35";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(x * w, y * h, w, h);
+    }
+  }, [loaded, placed, size, round.rows, round.columns, focus, selected]);
+  function place(piece: bigint, slot: bigint) {
+    if (
+      done.current ||
+      placedRef.current.has(piece) ||
+      placedRef.current.has(slot)
+    )
       return;
     if (piece !== slot) {
-      setFeedback("Chưa đúng rồi! Em thử một ô khác nhé.");
-      onWrong();
+      setFeedback("Mình thử một ô khác nhé!");
+      setBump(true);
+      setTimeout(() => setBump(false), 280);
       return;
     }
     const next = new Set(placedRef.current);
@@ -51,137 +204,146 @@ export default function PuzzleBoard({
     placedRef.current = next;
     setPlaced(next);
     setSelected(null);
-    setFeedback(
-      next.size === count
-        ? "Tuyệt vời! Bức ảnh đã hoàn chỉnh."
-        : "Chính xác! Tiếp tục nhé.",
-    );
-    onCorrect(next.size);
-    if (next.size === count) onComplete();
+    setFeedback("Đúng rồi! Con giỏi lắm!");
+    onCorrect();
+    if (BigInt(next.size) === count) {
+      done.current = true;
+      onComplete();
+    } else if (pieces.every((p) => next.has(p)) && page < lastPage)
+      setPage(page + 1n);
+  }
+  function canvasSlot(x: number, y: number) {
+    const r = (
+      board.current!.firstElementChild as HTMLElement
+    ).getBoundingClientRect();
+    const col = Math.max(
+        0,
+        Math.min(
+          round.columns - 1,
+          Math.floor(((x - r.left) / r.width) * round.columns),
+        ),
+      ),
+      row = Math.max(
+        0,
+        Math.min(
+          round.rows - 1,
+          Math.floor(((y - r.top) / r.height) * round.rows),
+        ),
+      );
+    return BigInt(row) * BigInt(round.columns) + BigInt(col);
   }
   if (broken)
     return (
-      <div className="error" role="alert">
-        Ảnh chưa tải được. Hãy kiểm tra kết nối rồi{" "}
-        <button
-          className="text-button"
-          onClick={() => {
-            setBroken(false);
-          }}
-        >
-          thử lại
-        </button>
-        .
+      <div className="game-feedback">
+        Ảnh chưa đọc được. Thầy cô hãy quay lại và chọn Thay ảnh.
       </div>
     );
   return (
-    <div className="puzzle-workspace">
-      <img hidden src={round.imageUrl} alt="" onError={() => setBroken(true)} />
-      <div className="puzzle-main">
+    <div className="puzzle-layout">
+      <div className="board-area" ref={area}>
         <div
-          className="board"
-          style={{
-            gridTemplateColumns: `repeat(${round.columns},1fr)`,
-            aspectRatio: ratio,
-            width: `min(100%, ${56 * ratio}vh)`,
-          }}
-          aria-label="Lưới ghép ảnh"
+          ref={board}
+          className={`puzzle-board ${bump ? "gentle-bump" : ""}`}
+          style={{ width: size.width, height: size.height }}
         >
-          {Array.from({ length: count }, (_, i) => (
-            <button
-              key={i}
-              className={`slot ${placed.has(i) ? "correct" : ""} ${selected !== null && !placed.has(i) ? "can-place" : ""}`}
-              style={
-                placed.has(i)
-                  ? pieceBackground(
-                      i,
-                      round.rows,
-                      round.columns,
-                      round.imageUrl,
-                    )
-                  : undefined
-              }
-              data-slot={i}
-              aria-label={
-                placed.has(i)
-                  ? `Ô ${i + 1}, đã ghép đúng`
-                  : `Đặt mảnh vào hàng ${Math.floor(i / round.columns) + 1}, cột ${(i % round.columns) + 1}`
-              }
-              disabled={locked || placed.has(i)}
-              onClick={() => {
-                if (selected !== null) place(selected, i);
-                else setFeedback("Em chọn một mảnh ảnh trước nhé.");
+          {count <= 144n ? (
+            <div
+              className="board-grid"
+              style={{
+                gridTemplateColumns: `repeat(${round.columns},1fr)`,
+                gridTemplateRows: `repeat(${round.rows},1fr)`,
               }}
             >
-              {!placed.has(i) && <span>{i + 1}</span>}
-            </button>
-          ))}
+              {Array.from({ length: Number(count) }, (_, i) => {
+                const p = BigInt(i);
+                return (
+                  <button
+                    key={i}
+                    className={`puzzle-cell ${placed.has(p) ? "placed" : ""} ${selected !== null ? "ready" : ""}`}
+                    aria-label={`Ô hàng ${Math.floor(i / round.columns) + 1}, cột ${(i % round.columns) + 1}${placed.has(p) ? ", đã ghép" : ""}`}
+                    disabled={placed.has(p)}
+                    onClick={() => {
+                      if (selected !== null) place(selected, p);
+                      else setFeedback("Con chọn một mảnh ảnh trước nhé!");
+                    }}
+                  >
+                    <span
+                      className="cell-image"
+                      style={pieceStyle(
+                        p,
+                        round.rows,
+                        round.columns,
+                        round.imageUrl!,
+                      )}
+                    />
+                    {!placed.has(p) && <span className="cell-dot" />}
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <canvas
+              ref={canvas}
+              style={{ width: size.width, height: size.height }}
+              tabIndex={0}
+              aria-label="Khung ghép ảnh. Chọn mảnh rồi chạm vào ô; dùng phím mũi tên và Enter nếu chơi bằng bàn phím."
+              onClick={(e) => {
+                if (selected !== null)
+                  place(selected, canvasSlot(e.clientX, e.clientY));
+              }}
+              onKeyDown={(e) => {
+                let next = focus;
+                if (e.key === "ArrowRight") next = focus + 1n;
+                if (e.key === "ArrowLeft") next = focus - 1n;
+                if (e.key === "ArrowDown") next = focus + BigInt(round.columns);
+                if (e.key === "ArrowUp") next = focus - BigInt(round.columns);
+                if (e.key.startsWith("Arrow")) {
+                  e.preventDefault();
+                  setFocus(next < 0n ? 0n : next >= count ? count - 1n : next);
+                }
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  if (selected !== null) place(selected, focus);
+                }
+              }}
+            />
+          )}
         </div>
-        {round.hint && (
-          <div className="hint-area">
-            <button
-              className="button ghost"
-              onClick={() => setShowHint((v) => !v)}
-              aria-expanded={showHint}
-            >
-              <Lightbulb size={18} />
-              {showHint ? "Ẩn gợi ý" : "Cần một gợi ý?"}
-            </button>
-            {showHint && <p>{round.hint}</p>}
-          </div>
-        )}
-        <p className="puzzle-feedback" role="status" aria-live="polite">
-          {feedback}
-        </p>
       </div>
-      <aside className="piece-panel">
-        <div className="piece-heading">
-          <h3>Các mảnh ghép</h3>
+      <section className="pieces-area" aria-label="Các mảnh ghép">
+        <div className="tray-title">
           <span>
-            <Check size={15} />
-            {placed.size}/{count}
+            <Hand size={20} />
+            Mảnh ghép của con
           </span>
+          <small>
+            {formatCount(BigInt(placed.size))} / {formatCount(count)}
+          </small>
         </div>
-        <p className="small muted">Kéo thả hoặc chạm mảnh → chạm ô.</p>
         <div className="piece-tray">
-          {order.map((piece) =>
-            placed.has(piece) ? (
-              <div
-                key={piece}
-                className="piece-placeholder"
-                style={{ aspectRatio: pieceRatio }}
-              >
-                <Check size={17} />
-              </div>
+          {pieces.map((p) =>
+            placed.has(p) ? (
+              <span key={p.toString()} className="piece-placeholder">
+                <Check size={25} />
+              </span>
             ) : (
               <button
-                key={piece}
-                className={`piece ${selected === piece ? "selected" : ""}`}
-                disabled={locked}
-                style={{
-                  ...pieceBackground(
-                    piece,
-                    round.rows,
-                    round.columns,
-                    round.imageUrl,
-                  ),
-                  aspectRatio: pieceRatio,
-                }}
-                aria-label={`Mảnh ảnh ${order.indexOf(piece) + 1}`}
-                aria-pressed={selected === piece}
+                key={p.toString()}
+                className={`puzzle-piece ${selected === p ? "selected" : ""}`}
+                aria-label={`Mảnh ghép ${p + 1n}`}
+                aria-pressed={selected === p}
                 onClick={() => {
                   if (ignoreClick.current) {
                     ignoreClick.current = false;
                     return;
                   }
-                  setSelected(piece);
-                  setFeedback("Bây giờ chọn một ô trong khung ảnh.");
+                  setSelected(p);
+                  setFeedback("Chạm vào ô trong khung hình nhé!");
                 }}
                 onPointerDown={(e) => {
-                  if (locked) return;
                   ignoreClick.current = false;
                   drag.current = {
-                    piece,
+                    piece: p,
                     x: e.clientX,
                     y: e.clientY,
                     moved: false,
@@ -189,54 +351,83 @@ export default function PuzzleBoard({
                   e.currentTarget.setPointerCapture(e.pointerId);
                 }}
                 onPointerMove={(e) => {
-                  const current = drag.current;
-                  if (!current) return;
-                  if (
-                    Math.hypot(e.clientX - current.x, e.clientY - current.y) > 7
-                  )
-                    current.moved = true;
-                  if (current.moved)
-                    setGhost({ piece, x: e.clientX, y: e.clientY });
+                  const d = drag.current;
+                  if (!d) return;
+                  if (Math.hypot(e.clientX - d.x, e.clientY - d.y) > 7)
+                    d.moved = true;
+                  if (d.moved)
+                    setGhost({ piece: p, x: e.clientX, y: e.clientY });
                 }}
                 onPointerCancel={() => {
                   drag.current = null;
                   setGhost(null);
                 }}
                 onPointerUp={(e) => {
-                  const current = drag.current;
+                  const d = drag.current;
                   drag.current = null;
                   setGhost(null);
-                  if (!current?.moved) return;
+                  if (!d?.moved) return;
                   ignoreClick.current = true;
-                  const slot = document
-                    .elementFromPoint(e.clientX, e.clientY)
-                    ?.closest("[data-slot]");
-                  if (slot)
-                    place(
-                      current.piece,
-                      Number(slot.getAttribute("data-slot")),
-                    );
+                  setSelected(p);
+                  const rect = (
+                    board.current!.firstElementChild as HTMLElement
+                  ).getBoundingClientRect();
+                  if (
+                    nearCorrectSlot(
+                      e.clientX,
+                      e.clientY,
+                      rect,
+                      p,
+                      round.rows,
+                      round.columns,
+                    )
+                  )
+                    place(p, p);
+                  else if (
+                    e.clientX >= rect.left &&
+                    e.clientX <= rect.right &&
+                    e.clientY >= rect.top &&
+                    e.clientY <= rect.bottom
+                  )
+                    place(p, canvasSlot(e.clientX, e.clientY));
                 }}
-              />
+              >
+                <PieceArt piece={p} round={round} />
+              </button>
             ),
           )}
         </div>
-      </aside>
+        {count > PAGE && (
+          <div className="tray-pages">
+            <button
+              className="round-control"
+              aria-label="Mảnh ghép trước"
+              disabled={page === 0n}
+              onClick={() => setPage((p) => p - 1n)}
+            >
+              <ChevronLeft />
+            </button>
+            <span>
+              {formatCount(page + 1n)} / {formatCount(lastPage + 1n)}
+            </span>
+            <button
+              className="round-control"
+              aria-label="Mảnh ghép tiếp theo"
+              disabled={page === lastPage}
+              onClick={() => setPage((p) => p + 1n)}
+            >
+              <ChevronRight />
+            </button>
+          </div>
+        )}
+      </section>
+      <p className="game-feedback" role="status">
+        {feedback}
+      </p>
       {ghost && (
-        <div
-          className="drag-ghost"
-          style={{
-            ...pieceBackground(
-              ghost.piece,
-              round.rows,
-              round.columns,
-              round.imageUrl,
-            ),
-            left: ghost.x,
-            top: ghost.y,
-            aspectRatio: pieceRatio,
-          }}
-        />
+        <div className="drag-ghost" style={{ left: ghost.x, top: ghost.y }}>
+          <PieceArt piece={ghost.piece} round={round} />
+        </div>
       )}
     </div>
   );

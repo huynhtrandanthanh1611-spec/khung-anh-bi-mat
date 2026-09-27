@@ -1,6 +1,5 @@
 import { z } from "zod";
-export const MIN_GRID = 2,
-  MAX_GRID = 10,
+export const MIN_GRID = 0,
   MAX_ROUNDS = 50,
   MAX_FILE_BYTES = 4 * 1024 * 1024;
 export const roundSchema = z.object({
@@ -11,8 +10,10 @@ export const roundSchema = z.object({
   title: z.string().max(150),
   hint: z.string().max(500),
   completionMessage: z.string().max(500),
-  rows: z.number().int().min(MIN_GRID).max(MAX_GRID),
-  columns: z.number().int().min(MIN_GRID).max(MAX_GRID),
+  completionText: z.string().max(2000).optional(),
+  completionImagePath: z.string().max(300).nullable().optional(),
+  rows: z.number().int().min(MIN_GRID),
+  columns: z.number().int().min(MIN_GRID),
   enabled: z.boolean(),
 });
 export const settingsSchema = z.object({
@@ -21,6 +22,7 @@ export const settingsSchema = z.object({
   subject: z.string().max(100),
   grade: z.string().max(50),
   musicPath: z.string().max(300).nullable(),
+  musicName: z.string().max(300).optional(),
   musicEnabled: z.boolean(),
   musicVolume: z.number().min(0).max(1),
   timerMode: z.enum(["none", "elapsed", "limit"]),
@@ -75,6 +77,6 @@ export function pieceBackground(
   return {
     backgroundImage: `url("${imageUrl}")`,
     backgroundSize: `${columns * 100}% ${rows * 100}%`,
-    backgroundPosition: `${((index % columns) / (columns - 1)) * 100}% ${(Math.floor(index / columns) / (rows - 1)) * 100}%`,
+    backgroundPosition: `${columns === 1 ? 0 : ((index % columns) / (columns - 1)) * 100}% ${rows === 1 ? 0 : (Math.floor(index / columns) / (rows - 1)) * 100}%`,
   };
 }

@@ -54,16 +54,17 @@ test("identity shuffles still start unsolved", () =>
     shufflePieces(4, () => 0.999999),
     [0, 1, 2, 3],
   ));
-test("grid configuration refuses fractions, zero, missing or excessive dimensions", () => {
-  for (const value of [0, 1, 11, 2.5, NaN])
+test("grid configuration accepts zero and large integers but refuses invalid dimensions", () => {
+  for (const value of [-1, 2.5, NaN, Infinity])
     assert.equal(
       roundSchema.safeParse({ ...round, rows: value }).success,
       false,
     );
-  assert.equal(
-    roundSchema.safeParse({ ...round, rows: 2, columns: 10 }).success,
-    true,
-  );
+  for (const value of [0, 1, 20, 50, 100, 1000000])
+    assert.equal(
+      roundSchema.safeParse({ ...round, rows: value, columns: value }).success,
+      true,
+    );
 });
 test("each round keeps independent dimensions; duplicate identities cannot overwrite rounds", () => {
   const second = {

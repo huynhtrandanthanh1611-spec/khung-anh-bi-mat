@@ -1,43 +1,63 @@
 import "fake-indexeddb/auto";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { api, importGame } from "../lib/client";
+import { api, hydrate } from "../lib/client";
 import type { Game } from "../types/game";
-
-test("local game creation, save, conflict detection, copy and deletion", async () => {
-  const g = await api<Game>("/api/games", { method: "POST" });
-  assert.equal(g.status, "draft");
-  const result = await api<{ version: number }>(`/api/games/${g.id}`, {
-    method: "PUT",
-    body: JSON.stringify({ ...g, title: "Bài học" }),
-  });
-  assert.equal(result.version, 1);
-  await assert.rejects(
-    api(`/api/games/${g.id}`, { method: "PUT", body: JSON.stringify(g) }),
-    /cửa sổ khác/,
-  );
-  assert.equal((await api<Game>(`/api/games/${g.id}`)).title, "Bài học");
-  const copy = await api<{ id: string }>(`/api/games/${g.id}/clone`, {
-    method: "POST",
-  });
-  assert.notEqual(copy.id, g.id);
-  assert.equal((await api<Game>(`/api/games/${copy.id}`)).status, "draft");
-  await assert.rejects(
-    api(`/api/games/${g.id}/publish`, {
-      method: "POST",
-      body: JSON.stringify({ version: 1, publish: true }),
+test("local game save is atomic across concurrent edits", async () => {
+  const game = await api<Game>("/api/games", { method: "POST" });
+  const results = await Promise.allSettled([
+    api(`/api/games/${game.id}`, {
+      method: "PUT",
+      body: JSON.stringify({ ...game, title: "A" }),
     }),
-    /ít nhất một vòng/,
-  );
-  await api(`/api/games/${g.id}`, { method: "DELETE" });
-  await assert.rejects(api(`/api/games/${g.id}`), /Không tìm thấy/);
-  await api(`/api/games/${copy.id}`, { method: "DELETE" });
+    api(`/api/games/${game.id}`, {
+      method: "PUT",
+      body: JSON.stringify({ ...game, title: "B" }),
+    }),
+  ]);
+  assert.equal(results.filter((r) => r.status === "fulfilled").length, 1);
+  assert.equal((await api<Game>(`/api/games/${game.id}`)).version, 1);
+  await api(`/api/games/${game.id}`, { method: "DELETE" });
+  await assert.rejects(api(`/api/games/${game.id}`), /Không tìm thấy/);
 });
-test("import rejects invalid packages without adding a game", async () => {
-  const before = (await api<Game[]>("/api/games")).length;
-  await assert.rejects(
-    importGame(new File(['{"format":"wrong"}'], "bad.json")),
-    /không hợp lệ/,
-  );
-  assert.equal((await api<Game[]>("/api/games")).length, before);
+test("legacy games retain completion text and zero or large grids can be saved", async () => {
+  const game = await api<Game>("/api/games", { method: "POST" });
+  game.rounds = [
+    {
+      id: crypto.randomUUID(),
+      imagePath: "old.webp",
+      width: 800,
+      height: 600,
+      title: "Old round",
+      hint: "",
+      completionMessage: "Lời nhắn cũ",
+      rows: 0,
+      columns: 100,
+      enabled: false,
+    },
+  ];
+  const migrated = await hydrate(game);
+  assert.equal(migrated.rounds[0].completionText, "Lời nhắn cũ");
+  assert.equal(migrated.rounds[0].completionImagePath, null);
+  await api(`/api/games/${game.id}`, {
+    method: "PUT",
+    body: JSON.stringify(migrated),
+  });
+  const loaded = await api<Game>(`/api/games/${game.id}`);
+  assert.equal(loaded.rounds[0].rows, 0);
+  assert.equal(loaded.rounds[0].columns, 100);
+  assert.equal(loaded.rounds[0].enabled, false);
+  assert.equal(loaded.rounds[0].completionText, "Lời nhắn cũ");
+  loaded.rounds[0].completionText = "Giỏi quá";
+  loaded.rounds[0].completionImagePath = "reward.webp";
+  loaded.rounds[0].rows = 1000;
+  await api(`/api/games/${game.id}`, {
+    method: "PUT",
+    body: JSON.stringify(loaded),
+  });
+  const updated = await api<Game>(`/api/games/${game.id}`);
+  assert.equal(updated.rounds[0].completionText, "Giỏi quá");
+  assert.equal(updated.rounds[0].completionImagePath, "reward.webp");
+  assert.equal(updated.rounds[0].rows, 1000);
+  await api(`/api/games/${game.id}`, { method: "DELETE" });
 });

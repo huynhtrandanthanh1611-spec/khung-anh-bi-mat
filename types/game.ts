@@ -7,6 +7,9 @@ export type Round = {
   title: string;
   hint: string;
   completionMessage: string;
+  completionText?: string;
+  completionImagePath?: string | null;
+  completionImageUrl?: string | null;
   rows: number;
   columns: number;
   enabled: boolean;
@@ -17,6 +20,7 @@ export type GameSettings = {
   subject: string;
   grade: string;
   musicPath: string | null;
+  musicName?: string;
   musicUrl?: string | null;
   musicEnabled: boolean;
   musicVolume: number;

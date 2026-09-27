@@ -1,29 +1,19 @@
-"use client";
 import { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import {
-  Plus,
-  ImagePlus,
-  Copy,
-  Trash2,
-  Share2,
-  Play,
-  ImageIcon,
-} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Plus, Play, Pencil, Trash2, ImagePlus, Puzzle } from "lucide-react";
 import { api } from "@/lib/client";
-import type { Game } from "@/types/game";
+import { playableError } from "@/lib/puzzle";
 import { Loading, Modal } from "@/components/shared";
-import ShareDialog from "./ShareDialog";
-import StudentGame, { toPreview } from "@/components/student/StudentGame";
-export default function Dashboard() {
+import { Rainbow, Sun } from "@/components/game/Decor";
+import type { Game } from "@/types/game";
+import type { StartGame } from "@/src/main";
+export default function Dashboard({ onPlay }: { onPlay: StartGame }) {
   const [games, setGames] = useState<Game[] | null>(null),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
-    [share, setShare] = useState<Game | null>(null),
-    [preview, setPreview] = useState<Game | null>(null);
+    [deleting, setDeleting] = useState<Game | null>(null);
   const navigate = useNavigate();
   async function refresh() {
-    setError("");
     try {
       setGames(await api<Game[]>("/api/games"));
     } catch (e) {
@@ -33,173 +23,151 @@ export default function Dashboard() {
   useEffect(() => {
     void refresh();
   }, []);
-  async function action(fn: () => Promise<void>) {
+  async function create() {
     setBusy(true);
     setError("");
     try {
-      await fn();
+      const g = await api<Game>("/api/games", { method: "POST" });
+      navigate(`/teacher/edit?id=${g.id}`);
     } catch (e) {
       setError((e as Error).message);
-    } finally {
       setBusy(false);
     }
   }
   return (
-    <main className="dashboard">
-      <div className="page-title">
-        <div>
-          <span className="eyebrow">GÓC SÁNG TẠO</span>
-          <h1>Trò chơi của thầy cô</h1>
-          <p>Mỗi bức ảnh là một vòng khám phá.</p>
-        </div>
-        <button
-          disabled={busy}
-          className="button primary"
-          onClick={() =>
-            action(async () => {
-              const game = await api<Game>("/api/games", { method: "POST" });
-              navigate(`/teacher/edit?id=${game.id}`);
-            })
-          }
-        >
-          <Plus />
-          Tạo trò chơi
-        </button>
-      </div>
-      {error && (
-        <div className="error" role="alert">
-          {error}{" "}
-          <button className="text-button" onClick={refresh}>
-            Thử lại
-          </button>
-        </div>
-      )}
-      {!games && !error && <Loading />}
-      {games?.length === 0 && (
-        <section className="empty-state">
-          <span className="empty-icon">
-            <ImagePlus size={48} />
+    <div className="teacher-shell">
+      <header className="teacher-header">
+        <a className="brand" href="#/">
+          <span className="brand-mark">
+            <Puzzle />
           </span>
-          <h2>Bắt đầu từ một bức ảnh</h2>
-          <p>
-            Bạn chưa có trò chơi nào.
-            <br />
-            Tạo trò chơi đầu tiên, thêm ảnh và chia sẻ với lớp.
-          </p>
+          Khung ảnh bí mật
+        </a>
+        <span className="local-note">Góc sáng tạo của thầy cô</span>
+      </header>
+      <main className="dashboard">
+        <section className="teacher-hero">
+          <div>
+            <span className="eyebrow">CÙNG CON KHÁM PHÁ</span>
+            <h1>
+              Một bức ảnh,
+              <br />
+              cả một <em>cuộc phiêu lưu.</em>
+            </h1>
+            <p>Thêm ảnh, chọn số mảnh và cùng các con ghép hình.</p>
+            <button className="button primary" disabled={busy} onClick={create}>
+              <Plus size={21} />
+              Tạo trò chơi
+            </button>
+          </div>
+          <div className="hero-art">
+            <Sun />
+            <Rainbow />
+            <span className="sticker star-one">✦</span>
+            <span className="sticker star-two">✦</span>
+          </div>
         </section>
-      )}
-      <div className="games-grid">
-        {games?.map((g) => (
-          <article className="game-card" key={g.id}>
-            <div className="card-image">
-              {g.rounds[0]?.imageUrl ? (
-                <img src={g.rounds[0].imageUrl} alt="" />
-              ) : (
-                <ImageIcon size={52} />
-              )}
-              <span className={`status ${g.status}`}>
-                {g.status === "published" ? "Sẵn sàng chơi" : "Bản nháp"}
-              </span>
-            </div>
-            <div className="card-body">
-              <span className="small muted">
-                {[g.subject, g.grade].filter(Boolean).join(" · ") ||
-                  "Trò chơi ghép ảnh"}
-              </span>
-              <h2>
-                <Link to={`/teacher/edit?id=${g.id}`}>{g.title}</Link>
-              </h2>
-              <p>
-                {g.rounds.filter((r) => r.enabled).length} / {g.rounds.length}{" "}
-                vòng đang bật
-              </p>
-              <p className="small muted">
-                Cập nhật {new Date(g.updatedAt).toLocaleDateString("vi-VN")}
-                {g.status === "published" ? ` · ${g.code}` : ""}
-              </p>
-              <div className="card-actions">
-                <Link
-                  className="button secondary"
-                  to={`/teacher/edit?id=${g.id}`}
-                >
-                  Chỉnh sửa
-                </Link>
-                <button
-                  className="icon-button"
-                  title="Xem thử"
-                  aria-label={`Xem thử ${g.title}`}
-                  disabled={busy || !g.rounds.some((r) => r.enabled)}
-                  onClick={() =>
-                    action(async () =>
-                      setPreview(await api<Game>(`/api/games/${g.id}`)),
-                    )
-                  }
-                >
-                  <Play size={19} />
-                </button>
-                <button
-                  className="icon-button"
-                  title="Chia sẻ"
-                  aria-label={`Chia sẻ ${g.title}`}
-                  disabled={g.status !== "published"}
-                  onClick={() => setShare(g)}
-                >
-                  <Share2 size={19} />
-                </button>
-                <button
-                  className="icon-button"
-                  title="Nhân bản"
-                  aria-label={`Nhân bản ${g.title}`}
-                  disabled={busy}
-                  onClick={() =>
-                    action(async () => {
-                      const clone = await api<{ id: string }>(
-                        `/api/games/${g.id}/clone`,
-                        { method: "POST" },
-                      );
-                      navigate(`/teacher/edit?id=${clone.id}`);
-                    })
-                  }
-                >
-                  <Copy size={19} />
-                </button>
-                <button
-                  className="icon-button danger"
-                  title="Xóa"
-                  aria-label={`Xóa ${g.title}`}
-                  disabled={busy}
-                  onClick={() => {
-                    if (
-                      confirm(
-                        `Xóa trò chơi “${g.title}” và các tệp của trò chơi?`,
-                      )
-                    )
-                      void action(async () => {
-                        await api(`/api/games/${g.id}`, { method: "DELETE" });
-                        await refresh();
-                      });
-                  }}
-                >
-                  <Trash2 size={19} />
-                </button>
+        <section className="game-library">
+          <div className="section-heading">
+            <h2>Trò chơi của tôi</h2>
+            {games && <span>{games.length} trò chơi</span>}
+          </div>
+          {error && (
+            <p className="notice error" role="alert">
+              {error}
+            </p>
+          )}
+          {!games && !error && <Loading />}
+          {games?.length === 0 && (
+            <div className="empty-state">
+              <div className="empty-picture">
+                <ImagePlus size={42} />
               </div>
+              <h3>Bắt đầu từ một bức ảnh nhé!</h3>
+              <p>Tạo trò chơi đầu tiên của thầy cô.</p>
             </div>
-          </article>
-        ))}
-      </div>
-      {share && (
-        <ShareDialog
-          id={share.id}
-          code={share.code}
-          title={share.title}
-          onClose={() => setShare(null)}
-        />
-      )}{" "}
-      {preview && (
-        <Modal title="Xem thử trò chơi" wide onClose={() => setPreview(null)}>
-          <StudentGame game={toPreview(preview)} preview />
+          )}
+          <div className="games-grid">
+            {games?.map((g, i) => (
+              <article className="game-card" key={g.id}>
+                <div className={`game-cover cover-${i % 3}`}>
+                  {g.rounds[0]?.imageUrl ? (
+                    <img src={g.rounds[0].imageUrl} alt="" />
+                  ) : (
+                    <Puzzle size={62} />
+                  )}
+                  <span className="round-count">{g.rounds.length} vòng</span>
+                </div>
+                <div className="game-card-content">
+                  <h3>{g.title}</h3>
+                  <div className="game-card-actions">
+                    <button
+                      className="button primary small"
+                      onClick={() => {
+                        const problem = playableError(g);
+                        if (problem) setError(problem);
+                        else onPlay(g);
+                      }}
+                    >
+                      <Play size={18} fill="currentColor" />
+                      Chơi
+                    </button>
+                    <button
+                      className="button soft small"
+                      onClick={() => navigate(`/teacher/edit?id=${g.id}`)}
+                    >
+                      <Pencil size={17} />
+                      Chỉnh sửa
+                    </button>
+                    <button
+                      className="icon-button"
+                      aria-label={`Xóa ${g.title}`}
+                      onClick={() => setDeleting(g)}
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+        <p className="storage-note">
+          Trò chơi được tự lưu trên trình duyệt này. Thầy cô dùng cùng thiết bị
+          để mở lại.
+        </p>
+      </main>
+      {deleting && (
+        <Modal title="Xóa trò chơi?" onClose={() => setDeleting(null)}>
+          <p>
+            “{deleting.title}” và các ảnh của trò chơi sẽ bị xóa trên thiết bị
+            này.
+          </p>
+          <div className="button-row">
+            <button className="button soft" onClick={() => setDeleting(null)}>
+              Giữ lại
+            </button>
+            <button
+              className="button danger"
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true);
+                try {
+                  await api(`/api/games/${deleting.id}`, { method: "DELETE" });
+                  setDeleting(null);
+                  await refresh();
+                } catch (e) {
+                  setError((e as Error).message);
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              Xóa trò chơi
+            </button>
+          </div>
         </Modal>
       )}
-    </main>
+    </div>
   );
 }

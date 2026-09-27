@@ -1,7 +1,6 @@
-# Kiểm tra bản tĩnh
+# Kiểm tra bản mầm non
 
-- `npm test`: 10 kiểm thử đạt, bao gồm quy tắc ghép ảnh, tính điểm, lưu cục bộ, xung đột phiên bản, nhân bản, xóa và từ chối gói nhập không hợp lệ.
-- `GITHUB_ACTIONS=true npm run build`: TypeScript và Vite production build đạt; đường dẫn asset dùng `/khung-anh-bi-mat/`.
-- Không còn thư viện Supabase, Next.js hoặc endpoint máy chủ trong bản triển khai.
-- Chưa kiểm tra luồng ảnh/âm thanh trên website đã triển khai: GitHub Pages hiện bị chặn do kho riêng tư trên gói tài khoản hiện tại.
-- Cần xác nhận công khai kho hoặc gói GitHub hỗ trợ Pages trước khi xuất bản.
+- 15 kiểm thử tự động đạt: dữ liệu cũ, lưu đồng thời, lưới 0/1/100 và lớn hơn, hoán vị lười, snap tolerance, giữ lời nhắn và ảnh chúc mừng.
+- TypeScript + Vite build đạt với base path của GitHub Pages.
+- Giao diện dùng Pointer Events (chuột / touch) và chọn mảnh → chọn ô; kiểm tra trên thiết bị cảm ứng thực tế vẫn nên thực hiện trước giờ dạy.
+- Xem danh sách kiểm tra trình duyệt trong `docs/acceptance.md`.
