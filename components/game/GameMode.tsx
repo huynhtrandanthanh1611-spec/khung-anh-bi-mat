@@ -48,6 +48,11 @@ export default function GameMode({
   const round = game.rounds[index],
     total = game.rounds.length;
   useEffect(() => {
+    if (phase !== "picture") return;
+    const timer = window.setTimeout(() => setPhase("reward"), 1000);
+    return () => window.clearTimeout(timer);
+  }, [phase, session, index]);
+  useEffect(() => {
     const old = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
@@ -204,12 +209,6 @@ export default function GameMode({
               alt="Bức tranh hoàn chỉnh vừa ghép xong"
             />
           </div>
-          <button
-            className="button game-button"
-            onClick={() => setPhase("reward")}
-          >
-            NHẬN LỜI KHEN <ArrowRight size={27} />
-          </button>
         </main>
       ) : phase === "reward" ? (
         <main className="celebration">
@@ -257,7 +256,7 @@ export default function GameMode({
               }
             }}
           >
-            TIẾP TỤC
+            {index === total - 1 ? "HOÀN THÀNH" : "TIẾP TỤC"}
             <ArrowRight size={27} />
           </button>
         </main>

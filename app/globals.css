@@ -2496,3 +2496,11 @@ h3,
 @media(prefers-reduced-motion:reduce) { .wrong-tray-piece,.wrong-piece-return {animation:none} .wrong-piece-return {opacity:.5} .reaction-symbol {animation:none} .game-cloud,.floating-star {animation:none} }
 /* Decorative overflow must not scroll the fixed game when a piece receives focus. */
 .game-mode { overflow: clip; }
+
+/* Rewards appear automatically after the completed picture. */
+.phase-reward .reward-sticker { animation: reward-arrive 480ms ease-out both; }
+.phase-reward .completion-text { animation: reward-fade 400ms 100ms ease-out both; }
+.phase-reward .completion-image { animation: reward-fade 450ms 150ms ease-out both; }
+@keyframes reward-arrive { 0% {opacity:0;transform:scale(.7)} 65% {opacity:1;transform:scale(1.08)} 100% {opacity:1;transform:scale(1)} }
+@keyframes reward-fade { from {opacity:0;transform:translateY(8px)} to {opacity:1;transform:translateY(0)} }
+@media(prefers-reduced-motion:reduce) { .phase-reward .reward-sticker,.phase-reward .completion-text,.phase-reward .completion-image {animation:none} }
