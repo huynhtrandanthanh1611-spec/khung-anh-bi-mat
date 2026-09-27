@@ -38,3 +38,9 @@ GitHub Actions build thư mục `dist/` rồi triển khai GitHub Pages khi push
 ### Hàng bằng 0 và phần thưởng
 
 0 hàng nghĩa là chỉ chia theo cột; ví dụ 0×5 tạo 5 mảnh dọc. Giá trị 0 được giữ nguyên khi lưu. Mỗi vòng có lời nhắn tự nhập, ảnh của cô (chọn tệp, kéo thả hoặc click vùng ảnh rồi Ctrl+V), và sticker tùy chọn. Sticker ngẫu nhiên tránh lặp hai vòng liền nhau; có thể chọn cố định. Ảnh clipboard phải là dữ liệu ảnh, không phải đường dẫn hoặc văn bản URL.
+
+### Chia sẻ trò chơi
+
+Bấm Chia sẻ → bật Cho phép chia sẻ → Sao chép link. Người nhận mở thẳng Game Mode ở #/play/:id, không cần tài khoản. Bản chia sẻ chứa ảnh, lời nhắn, sticker và nhạc bật tại lúc tạo; sửa game local không tự thay đổi bản đã chia sẻ. Tắt rồi bật để tạo bản mới. Mỗi bản tối đa 12 MB. Quyền thu hồi link được giữ trên trình duyệt tạo link; không đưa khóa quản lý vào link công khai. Xóa game local sẽ thu hồi link đang quản lý trước. Link đã tắt bị từ chối ở máy chủ; phiên đang chơi kiểm tra mỗi 5 giây khi có kết nối. Nội dung đã tải xuống trước đó không thể thu hồi khỏi thiết bị người nhận.
+
+Frontend vẫn GitHub Pages. Dịch vụ chia sẻ riêng dùng Sites + R2, không Supabase: `appgprj_6ab8b303a3688191a7da3bec448b0a59`. Nguồn dịch vụ được lưu trong kho Sites riêng; API không cung cấp danh sách game hay thao tác sửa cho người chỉ có link.

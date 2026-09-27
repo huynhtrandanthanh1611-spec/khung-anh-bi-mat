@@ -26,3 +26,7 @@
 ## Xem tranh và phóng to mảnh
 
 Sau mảnh cuối, hiển thị tranh tổng thể cho tới khi nhấn Nhận lời khen. Khay 6 mảnh/trang có mảnh cao 170px và vùng phóng to mảnh đang chọn phía dưới. Font giáo viên sử dụng Nunito và Baloo 2. 19 bài kiểm tra hồi quy và build GitHub Pages đạt.
+
+## Khay tự vừa khung và chia sẻ
+
+20 bài kiểm tra tự động đạt, gồm auto-fit 5/6/8/10/12/16/20 mảnh ở kích thước khay desktop, portrait và landscape; giữ tỉ lệ mảnh, không vượt container. Phân trang trên 20 mảnh. Preview thu gọn còn khoảng 29% khay. API share kiểm tra dữ liệu và giới hạn 12 MB; thao tác thu hồi cần token 256-bit, máy chủ chỉ lưu SHA-256.

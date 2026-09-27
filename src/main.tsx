@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
+import SharedPlayer from "@/components/game/SharedPlayer";
 import Dashboard from "@/components/teacher/Dashboard";
 import GameEditor from "@/components/teacher/GameEditor";
 import GameMode from "@/components/game/GameMode";
@@ -34,6 +35,7 @@ function App() {
     return <GameMode game={session.game} audio={session.audio} onExit={exit} />;
   return (
     <Routes>
+      <Route path="/play/:shareId" element={<SharedPlayer />} />
       <Route path="/" element={<Dashboard onPlay={start} />} />
       <Route path="/teacher" element={<Dashboard onPlay={start} />} />
       <Route path="/teacher/edit" element={<GameEditor onPlay={start} />} />

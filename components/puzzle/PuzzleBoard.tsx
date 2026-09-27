@@ -10,7 +10,8 @@ import {
   nearCorrectSlot,
 } from "@/lib/puzzle";
 import { drawPuzzleBoard } from "@/lib/drawPuzzleBoard";
-const PAGE = 6n;
+import { trayLayout } from "@/lib/trayLayout";
+const PAGE = 20n;
 function PieceArt({ piece, round }: { piece: bigint; round: Round }) {
   const clip = useId().replace(/:/g, "");
   const w = round.width / round.columns,
@@ -89,7 +90,9 @@ function PlayableBoard({
     [broken, setBroken] = useState(false),
     [focus, setFocus] = useState(0n),
     [hovered, setHovered] = useState<bigint | null>(null),
+    [traySize, setTraySize] = useState({ width: 360, height: 360 }),
     [bump, setBump] = useState(false);
+  const tray = useRef<HTMLDivElement>(null);
   const area = useRef<HTMLDivElement>(null),
     board = useRef<HTMLDivElement>(null),
     canvas = useRef<HTMLCanvasElement>(null),
@@ -109,6 +112,22 @@ function PlayableBoard({
     (_, i) => order(page * PAGE + BigInt(i)),
   );
   const ratio = round.width / round.height;
+  const grid = trayLayout(
+    pieces.length,
+    traySize.width,
+    traySize.height,
+    (ratio * round.rows) / round.columns,
+  );
+  useEffect(() => {
+    const el = tray.current;
+    if (!el) return;
+    const measure = () =>
+      setTraySize({ width: el.clientWidth - 12, height: el.clientHeight - 12 });
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
   useEffect(() => {
     const el = area.current;
     if (!el) return;
@@ -302,7 +321,14 @@ function PlayableBoard({
             {formatCount(BigInt(placed.size))} / {formatCount(count)}
           </small>
         </div>
-        <div className="piece-tray">
+        <div
+          className="piece-tray"
+          ref={tray}
+          style={{
+            gridTemplateColumns: `repeat(${grid.columns},minmax(0,1fr))`,
+            gridTemplateRows: `repeat(${grid.rows},minmax(0,1fr))`,
+          }}
+        >
           {pieces.map((p) =>
             placed.has(p) ? (
               <span key={p.toString()} className="piece-placeholder">

@@ -17,6 +17,7 @@ import { playableError } from "@/lib/puzzle";
 import type { Game, Round } from "@/types/game";
 import type { StartGame } from "@/src/main";
 import { Loading, Modal } from "@/components/shared";
+import ShareDialog from "./ShareDialog";
 import RoundCard from "./RoundCard";
 type Upload = { path: string; url: string; width: number; height: number };
 export default function GameEditor({ onPlay }: { onPlay: StartGame }) {
@@ -24,6 +25,7 @@ export default function GameEditor({ onPlay }: { onPlay: StartGame }) {
     id = params.get("id") || "",
     navigate = useNavigate();
   const { game, error, setError, status, change, flush } = useDraft(id);
+  const [sharing, setSharing] = useState<Game | null>(null);
   const [busy, setBusy] = useState(false),
     [removing, setRemoving] = useState<string | null>(null);
   const images = useRef<HTMLInputElement>(null),
@@ -309,15 +311,25 @@ export default function GameEditor({ onPlay }: { onPlay: StartGame }) {
             }}
           />
         </fieldset>
-        <div className="editor-bottom-note">
-          Tự lưu trên thiết bị này
-        </div>
+        <div className="editor-bottom-note">Tự lưu trên thiết bị này</div>
       </main>
       <footer className="start-bar">
         <span>
           {game.rounds.length} ảnh · {game.rounds.length} vòng khám phá
         </span>
         <div className="button-row">
+          <button
+            className="button soft"
+            disabled={busy}
+            onClick={() =>
+              void run(async () => {
+                const saved = await flush();
+                if (saved) setSharing(saved);
+              })
+            }
+          >
+            🔗 Chia sẻ
+          </button>
           <button
             className="button soft"
             disabled={busy || !game.rounds.length}
@@ -336,6 +348,9 @@ export default function GameEditor({ onPlay }: { onPlay: StartGame }) {
           </button>
         </div>
       </footer>
+      {sharing && (
+        <ShareDialog game={sharing} onClose={() => setSharing(null)} />
+      )}
       {removing && (
         <Modal title="Xóa vòng chơi này?" onClose={() => setRemoving(null)}>
           <p>Ảnh và lời nhắn của vòng này sẽ được bỏ khỏi trò chơi.</p>

@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, Play, Pencil, Trash2, ImagePlus, Puzzle } from "lucide-react";
+import ShareDialog from "./ShareDialog";
+import { disableShare } from "@/lib/sharing";
 import { api } from "@/lib/client";
 import { playableError } from "@/lib/puzzle";
 import { Loading, Modal } from "@/components/shared";
@@ -12,6 +14,7 @@ export default function Dashboard({ onPlay }: { onPlay: StartGame }) {
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
     [deleting, setDeleting] = useState<Game | null>(null);
+  const [sharing, setSharing] = useState<Game | null>(null);
   const navigate = useNavigate();
   async function refresh() {
     try {
@@ -120,6 +123,12 @@ export default function Dashboard({ onPlay }: { onPlay: StartGame }) {
                       Chỉnh sửa
                     </button>
                     <button
+                      className="button soft small"
+                      onClick={() => setSharing(g)}
+                    >
+                      🔗 Chia sẻ
+                    </button>
+                    <button
                       className="icon-button"
                       aria-label={`Xóa ${g.title}`}
                       onClick={() => setDeleting(g)}
@@ -137,6 +146,9 @@ export default function Dashboard({ onPlay }: { onPlay: StartGame }) {
           để mở lại.
         </p>
       </main>
+      {sharing && (
+        <ShareDialog game={sharing} onClose={() => setSharing(null)} />
+      )}
       {deleting && (
         <Modal title="Xóa trò chơi?" onClose={() => setDeleting(null)}>
           <p>
@@ -153,6 +165,7 @@ export default function Dashboard({ onPlay }: { onPlay: StartGame }) {
               onClick={async () => {
                 setBusy(true);
                 try {
+                  await disableShare(deleting.id);
                   await api(`/api/games/${deleting.id}`, { method: "DELETE" });
                   setDeleting(null);
                   await refresh();
