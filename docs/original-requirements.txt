@@ -1,0 +1,1895 @@
+Bạn là một Senior Full-stack Developer, UI/UX Designer và Game Developer.
+
+Hãy thiết kế và lập trình cho tôi một website trò chơi ghép ảnh dành cho giáo viên sử dụng trong lớp học.
+
+# 1. Mục tiêu sản phẩm
+
+Website cho phép GIÁO VIÊN tự tạo các trò chơi ghép ảnh mà không cần biết lập trình.
+
+Giáo viên có thể:
+
+- Tải ảnh của mình lên.
+- Mỗi ảnh tự động trở thành một vòng chơi.
+- Tùy chỉnh số hàng và số cột riêng cho từng ảnh.
+- Bật hoặc tắt từng vòng chơi.
+- Kéo thả để thay đổi thứ tự các vòng.
+- Thêm nhạc nền.
+- Thêm tiêu đề, gợi ý hoặc nội dung cho từng vòng.
+- Xem trước trò chơi.
+- Xuất bản trò chơi.
+- Chia sẻ trò chơi cho học sinh bằng link, mã trò chơi hoặc QR Code.
+
+HỌC SINH không được chỉnh sửa bất kỳ cài đặt nào.
+
+Học sinh chỉ cần:
+
+1. Mở đường link hoặc nhập mã trò chơi.
+2. Nhấn "Bắt đầu".
+3. Ghép các mảnh ảnh.
+4. Hoàn thành từng vòng.
+5. Chuyển sang vòng tiếp theo.
+6. Xem kết quả khi hoàn thành tất cả các vòng.
+
+Website phải đặc biệt dễ sử dụng với giáo viên và học sinh tiểu học/trung học.
+
+---
+
+# 2. Kiến trúc tổng thể
+
+Không xây dựng hai website riêng.
+
+Chỉ xây dựng MỘT website nhưng chia thành 2 khu vực theo vai trò.
+
+## A. Teacher Dashboard – Giao diện giáo viên
+
+Giáo viên phải đăng nhập.
+
+Giáo viên có thể:
+
+- Tạo trò chơi mới.
+- Chỉnh sửa trò chơi.
+- Quản lý các trò chơi đã tạo.
+- Upload ảnh.
+- Upload nhạc.
+- Tùy chỉnh từng vòng.
+- Xem trước.
+- Xuất bản.
+- Tạm ẩn trò chơi.
+- Sao chép link.
+- Lấy mã trò chơi.
+- Tạo QR Code.
+- Nhân bản trò chơi.
+- Xóa trò chơi.
+
+Có thể sử dụng URL dạng:
+
+/teacher
+
+/teacher/games
+
+/teacher/games/new
+
+/teacher/games/[id]/edit
+
+---
+
+## B. Student Game – Giao diện học sinh
+
+Học sinh KHÔNG cần tài khoản.
+
+Học sinh chỉ truy cập bằng link hoặc mã trò chơi.
+
+Ví dụ:
+
+/play/ABC123
+
+Giao diện học sinh tuyệt đối không hiển thị:
+
+- Upload ảnh.
+- Cài đặt.
+- Nút chỉnh sửa.
+- Dashboard.
+- Thông tin quản trị.
+- Các chức năng dành cho giáo viên.
+
+Học sinh chỉ thấy giao diện chơi.
+
+---
+
+# 3. Nguyên tắc cốt lõi: 1 ẢNH = 1 VÒNG CHƠI
+
+Đây là yêu cầu rất quan trọng.
+
+KHÔNG tạo thêm ô nhập:
+
+"Số vòng chơi"
+
+Số vòng phải được xác định tự động dựa trên số ảnh mà giáo viên thêm vào.
+
+Ví dụ:
+
+Giáo viên thêm:
+
+- Ảnh 1
+- Ảnh 2
+- Ảnh 3
+- Ảnh 4
+- Ảnh 5
+
+Thì hệ thống tự động có:
+
+5 ảnh = 5 vòng chơi.
+
+Nếu thêm ảnh thứ 6:
+
+→ tự động thành 6 vòng.
+
+Nếu xóa một ảnh:
+
+→ số vòng tự động giảm.
+
+Không yêu cầu giáo viên nhập số vòng thủ công.
+
+Điều này giúp giao diện đơn giản và tránh nhầm lẫn.
+
+---
+
+# 4. Vòng đang bật và vòng đang tắt
+
+Mỗi ảnh/vòng phải có trạng thái:
+
+- Bật
+- Tắt
+
+Ví dụ giáo viên upload 8 ảnh nhưng hiện tại chỉ muốn học sinh chơi 5 ảnh.
+
+Giáo viên KHÔNG cần xóa 3 ảnh còn lại.
+
+Chỉ cần tắt chúng.
+
+Ví dụ:
+
+Vòng 1 – Bật
+
+Vòng 2 – Bật
+
+Vòng 3 – Tắt
+
+Vòng 4 – Bật
+
+Vòng 5 – Tắt
+
+Vòng 6 – Bật
+
+Vòng 7 – Bật
+
+Vòng 8 – Tắt
+
+Khi học sinh chơi:
+
+Chỉ những vòng đang BẬT mới xuất hiện.
+
+Dashboard giáo viên cần hiển thị:
+
+Tổng số ảnh: 8
+
+Vòng đang sử dụng: 5
+
+Ví dụ:
+
+"5 / 8 vòng đang được bật"
+
+Nếu tất cả vòng đều bị tắt thì không cho phép xuất bản trò chơi.
+
+Hiển thị lỗi:
+
+"Bạn cần bật ít nhất một vòng chơi trước khi xuất bản."
+
+---
+
+# 5. Tạo trò chơi mới
+
+Trang "Tạo trò chơi mới" gồm:
+
+## Thông tin cơ bản
+
+Giáo viên nhập:
+
+- Tên trò chơi.
+- Mô tả.
+- Tên môn học – không bắt buộc.
+- Lớp – không bắt buộc.
+
+Ví dụ:
+
+Tên:
+
+Khám phá thế giới động vật
+
+Mô tả:
+
+Ghép các bức ảnh để nhận biết các loài động vật.
+
+---
+
+# 6. Upload nhiều ảnh
+
+Có nút lớn:
+
+"+ Thêm ảnh"
+
+Cho phép upload nhiều ảnh cùng lúc.
+
+Hỗ trợ:
+
+- JPG
+- JPEG
+- PNG
+- WEBP
+
+Sau khi upload, mỗi ảnh tự động tạo thành một Round/PuzzleRound.
+
+Ví dụ:
+
+Ảnh con mèo
+
+→ Vòng 1
+
+Ảnh con chó
+
+→ Vòng 2
+
+Ảnh con voi
+
+→ Vòng 3
+
+Không yêu cầu giáo viên tạo vòng thủ công rồi mới upload ảnh.
+
+---
+
+# 7. Quản lý từng vòng chơi
+
+Mỗi ảnh/vòng hiển thị bằng một Card.
+
+Ví dụ:
+
+--------------------------------
+
+VÒNG 1
+
+[Thumbnail ảnh]
+
+Trạng thái:
+
+[ BẬT ]
+
+Tên vòng:
+
+[________________]
+
+Số hàng:
+
+[-] 3 [+]
+
+Số cột:
+
+[-] 4 [+]
+
+Tổng số mảnh:
+
+12 mảnh
+
+Gợi ý:
+
+[________________]
+
+Thông báo sau khi hoàn thành:
+
+[________________]
+
+[ Xem thử ]
+
+[ Thay ảnh ]
+
+[ Xóa ]
+
+--------------------------------
+
+---
+
+# 8. Tùy chỉnh số hàng và số cột RIÊNG CHO TỪNG ẢNH
+
+Đây là chức năng bắt buộc.
+
+Không được sử dụng một cấu hình hàng/cột chung cho tất cả ảnh.
+
+Mỗi ảnh có:
+
+Số hàng:
+
+[input number]
+
+Số cột:
+
+[input number]
+
+Ví dụ:
+
+Ảnh 1:
+
+2 hàng × 3 cột
+
+→ 6 mảnh.
+
+Ảnh 2:
+
+3 hàng × 4 cột
+
+→ 12 mảnh.
+
+Ảnh 3:
+
+5 hàng × 5 cột
+
+→ 25 mảnh.
+
+Hệ thống phải tính tự động:
+
+Tổng số mảnh = rows × columns.
+
+Hiển thị ngay khi giáo viên thay đổi giá trị.
+
+Ví dụ:
+
+3 hàng × 4 cột = 12 mảnh.
+
+---
+
+# 9. Giới hạn hàng và cột
+
+Nên đặt giới hạn mặc định:
+
+Tối thiểu:
+
+2 hàng
+
+2 cột
+
+Tối đa:
+
+10 hàng
+
+10 cột
+
+Tuy nhiên code phải cho phép dễ dàng thay đổi giới hạn sau này.
+
+Nếu giáo viên nhập giá trị không hợp lệ thì hiển thị lỗi rõ ràng.
+
+---
+
+# 10. Độ khó
+
+Có thể hiển thị độ khó tham khảo tự động dựa vào số mảnh.
+
+Ví dụ:
+
+4–6 mảnh:
+
+Dễ
+
+8–12 mảnh:
+
+Trung bình
+
+16–25 mảnh:
+
+Khó
+
+Trên 25:
+
+Rất khó
+
+Đây chỉ là thông tin tham khảo dành cho giáo viên.
+
+Không bắt buộc hiển thị cho học sinh.
+
+---
+
+# 11. Sắp xếp thứ tự các vòng
+
+Cho phép giáo viên Drag & Drop các Round Card.
+
+Ví dụ ban đầu:
+
+Vòng 1 – Mèo
+
+Vòng 2 – Chó
+
+Vòng 3 – Voi
+
+Giáo viên kéo Voi lên đầu.
+
+Hệ thống cập nhật:
+
+Vòng 1 – Voi
+
+Vòng 2 – Mèo
+
+Vòng 3 – Chó
+
+Thứ tự này cũng là thứ tự học sinh chơi.
+
+Những vòng đang tắt vẫn có thể sắp xếp nhưng không xuất hiện trong phiên chơi của học sinh.
+
+---
+
+# 12. Thay ảnh nhưng giữ cài đặt
+
+Mỗi vòng cần có nút:
+
+"Thay ảnh"
+
+Khi thay ảnh:
+
+Giữ nguyên:
+
+- số hàng;
+- số cột;
+- tên vòng;
+- gợi ý;
+- nội dung hoàn thành;
+- trạng thái bật/tắt;
+- thứ tự vòng.
+
+Chỉ thay file hình ảnh.
+
+---
+
+# 13. Tên và gợi ý cho từng vòng
+
+Mỗi vòng có thể có:
+
+- Tên vòng.
+- Gợi ý.
+- Nội dung sau khi hoàn thành.
+
+Không bắt buộc.
+
+Ví dụ:
+
+Tên vòng:
+
+Động vật bí ẩn
+
+Gợi ý:
+
+Đây là một loài động vật thường được nuôi trong nhà.
+
+Sau khi hoàn thành:
+
+Chính xác! Đây là một chú mèo.
+
+---
+
+# 14. Nhạc nền
+
+Giáo viên có thể:
+
+- Upload file MP3.
+- Bật/tắt nhạc.
+- Điều chỉnh âm lượng.
+- Thay bài nhạc khác.
+- Xóa bài nhạc.
+
+Trong giao diện học sinh có nút:
+
+🔊 Âm thanh
+
+Cho phép bật/tắt.
+
+Lưu ý:
+
+Do trình duyệt có thể chặn autoplay, chỉ phát nhạc sau khi học sinh nhấn:
+
+"Bắt đầu trò chơi"
+
+Nhạc phải chạy xuyên suốt trò chơi.
+
+Khi chuyển từ vòng 1 sang vòng 2, không phát nhạc lại từ đầu.
+
+---
+
+# 15. Cách tạo puzzle
+
+Ưu tiên không tạo hàng chục file ảnh nhỏ trên server.
+
+Có thể sử dụng:
+
+- CSS background-image + background-position.
+- Canvas.
+- Client-side image slicing.
+
+Mỗi PuzzlePiece phải hiển thị chính xác một phần của ảnh.
+
+Ảnh không được:
+
+- méo;
+- kéo giãn sai tỷ lệ;
+- bị mất nội dung.
+
+Ví dụ:
+
+Ảnh chia thành:
+
+3 hàng × 4 cột
+
+→ 12 mảnh bằng nhau.
+
+Mỗi mảnh phải biết:
+
+- rowIndex;
+- columnIndex;
+- correctPosition;
+- currentPosition.
+
+---
+
+# 16. Cơ chế xáo trộn
+
+Khi bắt đầu một vòng:
+
+1. Tạo các PuzzlePiece.
+2. Xáo trộn vị trí.
+3. Đảm bảo trạng thái ban đầu không vô tình giống hoàn chỉnh.
+4. Hiển thị các mảnh cho học sinh ghép.
+
+---
+
+# 17. Cơ chế chơi chính
+
+Ưu tiên chế độ:
+
+Ghép ảnh vào lưới.
+
+Học sinh:
+
+1. Chọn/kéo một mảnh.
+2. Di chuyển tới vị trí cần đặt.
+3. Thả mảnh.
+4. Hệ thống kiểm tra đúng/sai.
+
+Nếu đúng:
+
+- có animation nhỏ;
+- có âm thanh tùy chọn;
+- khóa mảnh tại vị trí đó.
+
+Nếu sai:
+
+- mảnh quay về vị trí cũ;
+
+hoặc
+
+- đổi chỗ với mảnh đang nằm tại vị trí đó.
+
+Có thể chọn phương án UX tốt nhất.
+
+---
+
+# 18. Hỗ trợ cả chuột và cảm ứng
+
+Puzzle phải hoạt động tốt trên:
+
+- Desktop.
+- Laptop.
+- Tablet.
+- Điện thoại.
+- Màn hình cảm ứng.
+- Bảng tương tác.
+
+Không phụ thuộc hoàn toàn vào HTML5 Drag and Drop vì mobile/touch có thể hoạt động không ổn định.
+
+Ưu tiên:
+
+Pointer Events
+
+hoặc thư viện có hỗ trợ:
+
+- mouse;
+- touch;
+- pointer.
+
+---
+
+# 19. Hoàn thành một vòng
+
+Khi tất cả các mảnh đúng:
+
+1. Khóa puzzle.
+2. Hiển thị ảnh hoàn chỉnh.
+3. Có animation nhẹ.
+4. Hiển thị:
+
+"🎉 Chính xác!"
+
+Nếu giáo viên có nhập completionMessage thì hiển thị nó.
+
+Ví dụ:
+
+"Đây là Vịnh Hạ Long."
+
+Sau đó hiển thị:
+
+[ Vòng tiếp theo → ]
+
+Nếu là vòng cuối:
+
+[ Xem kết quả ]
+
+---
+
+# 20. Màn hình bắt đầu
+
+Hiển thị:
+
+Tên trò chơi
+
+Mô tả
+
+Số vòng đang được bật.
+
+Ví dụ:
+
+KHÁM PHÁ ĐỘNG VẬT
+
+5 vòng chơi
+
+[ ▶ BẮT ĐẦU ]
+
+[ 🔊 Âm thanh ]
+
+Không tính các vòng bị tắt.
+
+---
+
+# 21. Thanh tiến trình
+
+Trong trò chơi hiển thị:
+
+Vòng 2 / 5
+
+Progress Bar:
+
+40%
+
+Chỉ tính các vòng đang bật.
+
+Ví dụ có 8 ảnh nhưng chỉ bật 5 ảnh:
+
+Student Game hiển thị:
+
+Vòng 1 / 5
+
+không phải:
+
+Vòng 1 / 8.
+
+---
+
+# 22. Đồng hồ
+
+Giáo viên có thể chọn:
+
+### Chế độ A
+
+Không hiển thị thời gian.
+
+### Chế độ B
+
+Đếm thời gian hoàn thành.
+
+### Chế độ C
+
+Giới hạn thời gian.
+
+Ví dụ:
+
+5 phút.
+
+Nếu hết thời gian:
+
+Hiển thị giao diện phù hợp.
+
+---
+
+# 23. Hệ thống điểm
+
+Cho giáo viên tùy chọn:
+
+☑ Bật tính điểm
+
+hoặc
+
+☐ Không tính điểm.
+
+Nếu bật:
+
+Ví dụ:
+
+Hoàn thành vòng:
+
++100 điểm.
+
+Đặt sai:
+
+-5 điểm.
+
+Có thể thưởng dựa trên tốc độ.
+
+Tuy nhiên hệ thống điểm phải là tùy chọn, không bắt buộc.
+
+---
+
+# 24. Màn hình hoàn thành
+
+Sau vòng cuối:
+
+🎉 HOÀN THÀNH!
+
+Bạn đã hoàn thành 5/5 vòng.
+
+Thời gian:
+
+03:42
+
+Điểm:
+
+465
+
+Nút:
+
+[ Chơi lại ]
+
+[ Về trang chủ ]
+
+Nếu giáo viên tắt điểm:
+
+không hiển thị điểm.
+
+Nếu giáo viên tắt thời gian:
+
+không hiển thị thời gian.
+
+---
+
+# 25. Preview dành cho giáo viên
+
+Trong Game Editor phải có:
+
+"▶ Xem thử"
+
+Khi nhấn:
+
+Mở phiên Preview giống hệt trải nghiệm của học sinh.
+
+Preview:
+
+- không cần publish;
+- không ảnh hưởng dữ liệu thật;
+- không ghi thành tích học sinh;
+- sử dụng cấu hình hiện tại chưa xuất bản.
+
+---
+
+# 26. Draft và Published
+
+Game có ít nhất hai trạng thái:
+
+Draft
+
+Published
+
+Draft:
+
+Chỉ giáo viên xem/chỉnh sửa.
+
+Published:
+
+Học sinh có thể truy cập.
+
+Có thể bổ sung:
+
+Archived
+
+nếu cần.
+
+---
+
+# 27. Xuất bản
+
+Trước khi publish phải kiểm tra:
+
+- Có ít nhất một ảnh.
+- Có ít nhất một vòng đang bật.
+- Rows hợp lệ.
+- Columns hợp lệ.
+- Các file ảnh tồn tại.
+
+Nếu không hợp lệ:
+
+Không publish.
+
+Hiển thị lỗi rõ ràng bằng tiếng Việt.
+
+---
+
+# 28. Chia sẻ trò chơi
+
+Sau khi xuất bản:
+
+Tạo mã trò chơi ngắn.
+
+Ví dụ:
+
+ABC123
+
+Tạo URL:
+
+https://domain.com/play/ABC123
+
+Hiển thị:
+
+Mã trò chơi:
+
+ABC123
+
+Link:
+
+https://domain.com/play/ABC123
+
+QR Code:
+
+[QR CODE]
+
+Có các nút:
+
+[ Sao chép link ]
+
+[ Sao chép mã ]
+
+[ Tải QR ]
+
+---
+
+# 29. Trang nhập mã trò chơi
+
+Trang chủ dành cho học sinh:
+
+Nhập mã trò chơi
+
+[ ABC123 ]
+
+[ THAM GIA ]
+
+Sau khi nhập:
+
+Redirect tới:
+
+/play/ABC123
+
+Nếu mã không tồn tại:
+
+"Không tìm thấy trò chơi."
+
+Nếu game chưa Published:
+
+"Trò chơi hiện chưa sẵn sàng."
+
+---
+
+# 30. Teacher Dashboard
+
+Dashboard hiển thị các game dạng card hoặc table.
+
+Mỗi game hiển thị:
+
+- Thumbnail.
+- Tên game.
+- Draft / Published.
+- Tổng số ảnh.
+- Số vòng đang bật.
+- Ngày cập nhật.
+- Mã game nếu đã publish.
+
+Các action:
+
+[ Chỉnh sửa ]
+
+[ Xem thử ]
+
+[ Chia sẻ ]
+
+[ Nhân bản ]
+
+[ Xóa ]
+
+---
+
+# 31. Auto Save
+
+Game Editor nên tự động lưu.
+
+Ví dụ trạng thái:
+
+Đang lưu...
+
+sau đó:
+
+✓ Đã lưu
+
+Sử dụng debounce để không gửi request liên tục.
+
+Ví dụ:
+
+Sau khoảng 500–1000ms kể từ thay đổi cuối.
+
+---
+
+# 32. Cảnh báo khi rời trang
+
+Nếu có thay đổi chưa lưu:
+
+Hiển thị cảnh báo trước khi giáo viên đóng hoặc rời trang.
+
+Mục tiêu là tránh mất dữ liệu.
+
+---
+
+# 33. Giao diện Teacher Editor
+
+Trên desktop có thể chia:
+
+### Sidebar trái
+
+- Thông tin.
+- Các vòng.
+- Nhạc nền.
+- Cài đặt.
+- Chia sẻ.
+
+### Trung tâm
+
+Game Editor.
+
+### Bên phải
+
+Preview.
+
+Nếu màn hình nhỏ:
+
+Preview có thể mở bằng Modal hoặc Tab.
+
+---
+
+# 34. Thiết kế UX cho giáo viên
+
+Ưu tiên:
+
+- ít bước;
+- không dùng thuật ngữ kỹ thuật;
+- thao tác trực quan;
+- nút rõ ràng;
+- preview trực tiếp.
+
+Ví dụ không hiển thị cho giáo viên:
+
+rows = 4
+columns = 5
+
+theo kiểu kỹ thuật.
+
+Thay vào đó:
+
+Số hàng: 4
+
+Số cột: 5
+
+Tổng số mảnh: 20.
+
+---
+
+# 35. Thiết kế UX cho học sinh
+
+Giao diện:
+
+- vui vẻ;
+- nút lớn;
+- ít chữ;
+- dễ hiểu;
+- không có cài đặt phức tạp.
+
+Puzzle phải chiếm phần lớn diện tích màn hình.
+
+Trên tablet:
+
+tối ưu để học sinh kéo bằng ngón tay.
+
+---
+
+# 36. Responsive
+
+Website phải hoạt động tốt trên:
+
+- 1920×1080.
+- Laptop.
+- Tablet ngang.
+- Tablet dọc.
+- Smartphone.
+
+PuzzleBoard cần tự tính kích thước phù hợp viewport.
+
+Không để puzzle tràn khỏi màn hình.
+
+---
+
+# 37. Bảo mật
+
+Teacher Dashboard bắt buộc xác thực.
+
+API:
+
+Create Game
+
+Update Game
+
+Delete Game
+
+Upload Image
+
+Upload Audio
+
+Publish Game
+
+phải kiểm tra quyền sở hữu.
+
+Giáo viên A không được sửa game của giáo viên B.
+
+Student API chỉ cung cấp dữ liệu cần thiết của Published Game.
+
+Không gửi các thông tin quản trị xuống client học sinh.
+
+---
+
+# 38. Storage
+
+Không lưu ảnh dưới dạng Base64 trong database.
+
+Ảnh và nhạc lưu trong Object Storage.
+
+Ví dụ:
+
+Supabase Storage.
+
+Database chỉ lưu URL/path và metadata.
+
+---
+
+# 39. Database đề xuất
+
+Có thể sử dụng PostgreSQL.
+
+## User
+
+id
+
+name
+
+email
+
+createdAt
+
+updatedAt
+
+---
+
+## Game
+
+id
+
+teacherId
+
+title
+
+description
+
+subject
+
+grade
+
+status
+
+gameCode
+
+musicUrl
+
+musicEnabled
+
+musicVolume
+
+timerMode
+
+timeLimit
+
+scoreEnabled
+
+createdAt
+
+updatedAt
+
+publishedAt
+
+---
+
+## PuzzleRound
+
+id
+
+gameId
+
+order
+
+imageUrl
+
+title
+
+hint
+
+completionMessage
+
+rows
+
+columns
+
+enabled
+
+createdAt
+
+updatedAt
+
+Điểm quan trọng:
+
+enabled = true / false
+
+quyết định vòng có xuất hiện với học sinh hay không.
+
+---
+
+# 40. Không lưu số vòng thủ công
+
+Không nên có field:
+
+numberOfRounds
+
+trong Game nếu không thực sự cần.
+
+Tổng số vòng có thể tính:
+
+COUNT(PuzzleRound)
+
+Số vòng đang hoạt động:
+
+COUNT(PuzzleRound WHERE enabled = true)
+
+Nhờ vậy tránh lỗi:
+
+Game ghi 5 vòng nhưng database thực tế có 6 ảnh.
+
+Nguồn dữ liệu duy nhất phải là PuzzleRound.
+
+---
+
+# 41. Công nghệ đề xuất
+
+Frontend:
+
+- Next.js.
+- React.
+- TypeScript.
+
+Styling:
+
+- Tailwind CSS.
+
+UI:
+
+- shadcn/ui hoặc component library tương đương.
+
+Animation:
+
+- Framer Motion.
+
+Drag and Drop:
+
+- dnd-kit;
+
+hoặc
+
+- giải pháp Pointer Events riêng phù hợp với puzzle.
+
+Database:
+
+- PostgreSQL.
+
+Backend:
+
+- Next.js Server Actions/API Routes;
+
+hoặc backend riêng nếu kiến trúc yêu cầu.
+
+Authentication:
+
+- Supabase Auth;
+
+hoặc giải pháp tương đương.
+
+Storage:
+
+- Supabase Storage;
+
+hoặc tương đương.
+
+---
+
+# 42. Cấu trúc source code
+
+Không viết toàn bộ ứng dụng trong một file.
+
+Ví dụ:
+
+/app
+
+/app/teacher
+
+/app/teacher/games
+
+/app/play/[code]
+
+/components
+
+/components/teacher
+
+/components/student
+
+/components/puzzle
+
+/components/shared
+
+/hooks
+
+/lib
+
+/services
+
+/types
+
+/utils
+
+---
+
+# 43. Các component quan trọng
+
+TeacherDashboard
+
+GameCard
+
+GameEditor
+
+GeneralSettings
+
+RoundList
+
+RoundEditor
+
+RoundCard
+
+ImageUploader
+
+MusicUploader
+
+GameSettings
+
+GamePreview
+
+PublishDialog
+
+ShareDialog
+
+QRCodeDisplay
+
+StudentGame
+
+GameStartScreen
+
+PuzzleBoard
+
+PuzzleGrid
+
+PuzzlePiece
+
+GameProgress
+
+RoundComplete
+
+GameCompleteScreen
+
+---
+
+# 44. State Management
+
+Đảm bảo trạng thái Editor dễ quản lý.
+
+Game Editor cần quản lý:
+
+- Game metadata.
+- Round list.
+- Round order.
+- Enabled/disabled.
+- Puzzle configuration.
+- Audio settings.
+- Game settings.
+
+Có thể dùng:
+
+React state
+
+Context
+
+Zustand
+
+hoặc công cụ phù hợp.
+
+Không over-engineering nếu không cần.
+
+---
+
+# 45. Xử lý upload ảnh
+
+Khi upload:
+
+1. Validate extension.
+2. Validate MIME type.
+3. Validate kích thước.
+4. Upload Storage.
+5. Tạo PuzzleRound.
+6. Tự động thêm vào cuối danh sách.
+7. Mặc định:
+
+enabled = true.
+
+Có loading progress.
+
+Nếu upload thất bại:
+
+Hiển thị lỗi nhưng không làm mất những ảnh khác.
+
+---
+
+# 46. Upload nhiều ảnh
+
+Nếu upload 10 ảnh cùng lúc:
+
+Tạo 10 PuzzleRound.
+
+Không yêu cầu giáo viên thao tác 10 lần.
+
+Có thể cho phép upload song song có giới hạn concurrency.
+
+---
+
+# 47. Cài đặt mặc định cho ảnh mới
+
+Khi giáo viên thêm ảnh mới:
+
+Có thể mặc định:
+
+rows = 3
+
+columns = 3
+
+enabled = true
+
+order = cuối danh sách.
+
+Sau đó giáo viên tự chỉnh.
+
+---
+
+# 48. Xóa vòng
+
+Khi giáo viên bấm Xóa:
+
+Hiển thị confirm:
+
+"Bạn có chắc muốn xóa vòng này?"
+
+Nếu xóa:
+
+- xóa PuzzleRound;
+- cập nhật order;
+- cập nhật số vòng;
+- nếu cần xóa file Storage.
+
+---
+
+# 49. Bật/tắt nhanh
+
+Trên mỗi Round Card có switch:
+
+Hiển thị trong trò chơi
+
+ON / OFF
+
+Giáo viên có thể bật/tắt mà không cần mở chi tiết vòng.
+
+Những vòng OFF nên giảm opacity để dễ nhận biết.
+
+---
+
+# 50. Bulk Action nếu có thời gian
+
+Có thể bổ sung:
+
+"Bật tất cả"
+
+"Tắt tất cả"
+
+Tuy nhiên nếu tắt tất cả thì publish phải bị khóa.
+
+---
+
+# 51. Puzzle Preview ngay trong Editor
+
+Khi giáo viên thay đổi:
+
+3 × 3
+
+thành
+
+4 × 5
+
+Preview nên cập nhật ngay thành 20 mảnh.
+
+Điều này giúp giáo viên hiểu độ khó trước khi publish.
+
+---
+
+# 52. Game Preview
+
+Có thể có hai mức:
+
+### Preview Round
+
+Xem thử riêng vòng hiện tại.
+
+### Preview Game
+
+Chơi toàn bộ game giống học sinh.
+
+---
+
+# 53. Tối ưu ảnh
+
+Khi upload ảnh lớn:
+
+Có thể resize/compress hợp lý.
+
+Tuy nhiên phải giữ chất lượng đủ tốt cho puzzle.
+
+Tạo thumbnail cho Teacher Dashboard nếu cần.
+
+---
+
+# 54. Accessibility
+
+Các nút phải có:
+
+- kích thước đủ lớn;
+- aria-label;
+- keyboard focus;
+- tương phản tốt.
+
+Nếu có thể:
+
+hỗ trợ click chọn mảnh + click vị trí thay vì chỉ drag.
+
+Điều này giúp accessibility và cũng hữu ích trên một số thiết bị.
+
+---
+
+# 55. Hai phương thức điều khiển puzzle
+
+Ưu tiên hỗ trợ:
+
+### Cách 1
+
+Drag & Drop.
+
+### Cách 2
+
+Click/Tap:
+
+Chạm mảnh A.
+
+Sau đó chạm ô B.
+
+→ di chuyển/đổi vị trí.
+
+Cách 2 rất hữu ích trên điện thoại, tablet và bảng tương tác.
+
+---
+
+# 56. Animation
+
+Animation nhẹ:
+
+- mảnh đúng: scale nhỏ.
+- hoàn thành vòng: confetti nhẹ.
+- progress chuyển động.
+- transition giữa các vòng.
+
+Không dùng animation quá nhiều làm học sinh mất tập trung.
+
+---
+
+# 57. Âm thanh hiệu ứng
+
+Có thể bổ sung:
+
+- correct.mp3
+- complete.mp3
+
+Nhưng phải có:
+
+Sound Effects ON/OFF.
+
+Không để âm thanh quá lớn.
+
+---
+
+# 58. Tự động sang vòng tiếp theo
+
+Mặc định:
+
+Sau khi hoàn thành, học sinh bấm:
+
+"Vòng tiếp theo"
+
+Không tự động chuyển ngay để học sinh có thời gian nhìn ảnh hoàn chỉnh.
+
+Có thể sau này thêm setting:
+
+Auto next round.
+
+---
+
+# 59. Tính kết quả
+
+Kết quả phiên chơi có thể bao gồm:
+
+- số vòng hoàn thành;
+- tổng thời gian;
+- số lần đặt sai;
+- điểm.
+
+Trong MVP chưa bắt buộc lưu kết quả vào database.
+
+---
+
+# 60. Phiên bản nâng cao sau MVP
+
+Kiến trúc nên có khả năng mở rộng sau này cho:
+
+- Học sinh nhập tên.
+- Lưu kết quả.
+- Leaderboard.
+- Lớp học.
+- Phòng chơi.
+- Thi đấu trực tiếp.
+- Thống kê.
+- Báo cáo giáo viên.
+- Chia sẻ game giữa giáo viên.
+- Thư viện trò chơi.
+- Clone game.
+- Hình dạng puzzle nâng cao.
+- Jigsaw puzzle thực sự.
+- Video.
+- Câu hỏi sau mỗi ảnh.
+
+NHƯNG không triển khai các tính năng này trước khi MVP ổn định.
+
+---
+
+# 61. Ưu tiên MVP
+
+Phiên bản đầu tiên phải hoàn thiện thật tốt:
+
+1. Giáo viên đăng nhập.
+2. Giáo viên tạo game.
+3. Upload nhiều ảnh.
+4. 1 ảnh = 1 vòng.
+5. Không nhập số vòng bằng tay.
+6. Bật/tắt từng vòng.
+7. Mỗi vòng có rows riêng.
+8. Mỗi vòng có columns riêng.
+9. Tự tính tổng số mảnh.
+10. Kéo thả thay đổi thứ tự vòng.
+11. Upload nhạc.
+12. Xem trước.
+13. Draft.
+14. Publish.
+15. Tạo game code.
+16. Tạo link.
+17. QR Code.
+18. Học sinh không cần tài khoản.
+19. Student Game chỉ hiển thị vòng đang bật.
+20. Puzzle hoạt động bằng chuột và touch.
+21. Kiểm tra hoàn thành.
+22. Chuyển vòng.
+23. Màn hình kết quả.
+24. Responsive.
+
+---
+
+# 62. Quy tắc quan trọng khi lập trình
+
+Không được tạo dữ liệu giả rồi gọi đó là ứng dụng hoàn chỉnh.
+
+Không chỉ tạo UI mockup.
+
+Website phải hoạt động thực sự.
+
+Không hard-code ảnh.
+
+Không hard-code số vòng.
+
+Không hard-code số hàng/cột.
+
+Giáo viên phải thay đổi tất cả những dữ liệu này trực tiếp trên giao diện.
+
+---
+
+# 63. Yêu cầu về code
+
+Code phải:
+
+- sạch;
+- rõ ràng;
+- dễ bảo trì;
+- TypeScript đầy đủ;
+- component hóa;
+- reusable;
+- responsive;
+- có loading state;
+- có error handling;
+- có validation;
+- có empty state.
+
+Không tạo component quá lớn nếu có thể tách nhỏ.
+
+Không đặt toàn bộ business logic trong UI.
+
+---
+
+# 64. Validation
+
+Ví dụ validation:
+
+Game title:
+
+Bắt buộc.
+
+Ảnh:
+
+Phải có ít nhất 1.
+
+Enabled Round:
+
+Phải có ít nhất 1 trước khi publish.
+
+Rows:
+
+Số nguyên hợp lệ.
+
+Columns:
+
+Số nguyên hợp lệ.
+
+Audio:
+
+File hợp lệ.
+
+---
+
+# 65. Empty State
+
+Nếu giáo viên chưa có game:
+
+Hiển thị:
+
+"Bạn chưa có trò chơi nào."
+
+[ + Tạo trò chơi đầu tiên ]
+
+Nếu game chưa có ảnh:
+
+Hiển thị:
+
+"Hãy thêm ảnh đầu tiên để tạo vòng chơi."
+
+[ + Thêm ảnh ]
+
+---
+
+# 66. Trải nghiệm lý tưởng của giáo viên
+
+Luồng sử dụng phải đơn giản như sau:
+
+Bước 1:
+
+Đăng nhập.
+
+Bước 2:
+
+Nhấn "Tạo trò chơi".
+
+Bước 3:
+
+Nhập tên.
+
+Bước 4:
+
+Kéo 5 ảnh vào uploader.
+
+Hệ thống tự tạo 5 vòng.
+
+Bước 5:
+
+Giáo viên chỉnh:
+
+Vòng 1:
+
+2 × 3
+
+Vòng 2:
+
+3 × 3
+
+Vòng 3:
+
+3 × 4
+
+Vòng 4:
+
+4 × 4
+
+Vòng 5:
+
+5 × 5
+
+Bước 6:
+
+Nếu không muốn dùng vòng 4:
+
+Tắt vòng 4.
+
+Hệ thống hiển thị:
+
+4 / 5 vòng đang bật.
+
+Bước 7:
+
+Upload nhạc.
+
+Bước 8:
+
+Xem thử.
+
+Bước 9:
+
+Publish.
+
+Bước 10:
+
+Sao chép link hoặc QR Code gửi học sinh.
+
+---
+
+# 67. Trải nghiệm lý tưởng của học sinh
+
+Học sinh:
+
+1. Quét QR.
+2. Website mở.
+3. Thấy tên game.
+4. Nhấn Bắt đầu.
+5. Nhạc chạy.
+6. Ghép vòng 1.
+7. Hoàn thành.
+8. Nhấn Vòng tiếp theo.
+9. Chơi cho đến hết.
+10. Xem màn hình hoàn thành.
+
+Không đăng nhập.
+
+Không tạo tài khoản.
+
+Không cài đặt.
+
+Không nhìn thấy Dashboard.
+
+---
+
+# 68. Yêu cầu cuối cùng dành cho AI lập trình
+
+Hãy triển khai dự án theo thứ tự:
+
+1. Phân tích yêu cầu.
+2. Thiết kế kiến trúc.
+3. Thiết kế database.
+4. Thiết kế routes.
+5. Thiết kế Teacher Dashboard.
+6. Thiết kế Game Editor.
+7. Xây upload system.
+8. Xây Round Management.
+9. Xây Puzzle Engine.
+10. Xây Preview.
+11. Xây publish/share.
+12. Xây Student Game.
+13. Kiểm tra authentication/authorization.
+14. Kiểm tra responsive.
+15. Kiểm tra touch.
+16. Kiểm tra lỗi.
+17. Hoàn thiện UX.
+
+Trước khi viết code, hãy trình bày ngắn gọn:
+
+- kiến trúc dự án;
+- database schema;
+- routing;
+- component tree;
+- state/data flow.
+
+Sau đó mới bắt đầu triển khai code.
+
+Khi viết code:
+
+Hãy cung cấp đường dẫn chính xác của từng file.
+
+Ví dụ:
+
+/app/teacher/games/[id]/edit/page.tsx
+
+/components/puzzle/PuzzleBoard.tsx
+
+/components/teacher/RoundCard.tsx
+
+Không được đưa ra những đoạn code rời rạc không biết đặt ở đâu.
+
+Mỗi đoạn code phải ghi rõ tên file.
+
+Nếu cần cài package, phải ghi rõ lệnh.
+
+Ví dụ:
+
+npm install ...
+
+Cuối cùng cung cấp:
+
+1. Hướng dẫn cài đặt.
+2. Environment variables cần thiết.
+3. Hướng dẫn tạo database.
+4. Hướng dẫn chạy local.
+5. Hướng dẫn build production.
+6. Hướng dẫn deploy.
+
+Mục tiêu cuối cùng là tạo ra một website trò chơi ghép ảnh mà một giáo viên bình thường, không biết lập trình, cũng có thể tự tạo trò chơi cho học sinh một cách dễ dàng.
