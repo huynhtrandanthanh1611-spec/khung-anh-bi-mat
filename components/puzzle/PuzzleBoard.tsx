@@ -40,10 +40,12 @@ function PieceArt({ piece, round }: { piece: bigint; round: Round }) {
 export default function PuzzleBoard({
   round,
   onCorrect,
+  onWrong,
   onComplete,
 }: {
   round: Round;
   onCorrect: () => void;
+  onWrong?: () => void;
   onComplete: () => void;
 }) {
   const count = pieceCount(round.rows, round.columns);
@@ -58,6 +60,7 @@ export default function PuzzleBoard({
       key={`${round.id}-${round.rows}-${round.columns}`}
       round={{ ...round, rows: effectiveRows(round.rows) }}
       count={count}
+      onWrong={onWrong}
       onCorrect={onCorrect}
       onComplete={onComplete}
     />
@@ -67,11 +70,13 @@ function PlayableBoard({
   round,
   count,
   onCorrect,
+  onWrong,
   onComplete,
 }: {
   round: Round;
   count: bigint;
   onCorrect: () => void;
+  onWrong?: () => void;
   onComplete: () => void;
 }) {
   const [placed, setPlaced] = useState(new Set<bigint>()),
@@ -91,7 +96,15 @@ function PlayableBoard({
     [focus, setFocus] = useState(0n),
     [hovered, setHovered] = useState<bigint | null>(null),
     [traySize, setTraySize] = useState({ width: 360, height: 360 }),
-    [bump, setBump] = useState(false);
+    [reaction, setReaction] = useState<{slot: bigint; piece: bigint; wrong: boolean; id: number} | null>(null);
+  const reactionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reactionId = useRef(0);
+  useEffect(() => () => { if (reactionTimer.current) clearTimeout(reactionTimer.current); }, []);
+  function reactAt(piece: bigint, slot: bigint, wrong: boolean) {
+    if (reactionTimer.current) clearTimeout(reactionTimer.current);
+    setReaction({piece, slot, wrong, id: ++reactionId.current});
+    reactionTimer.current = setTimeout(() => setReaction(null), 800);
+  }
   const tray = useRef<HTMLDivElement>(null);
   const area = useRef<HTMLDivElement>(null),
     board = useRef<HTMLDivElement>(null),
@@ -188,16 +201,17 @@ function PlayableBoard({
   function place(piece: bigint, slot: bigint) {
     if (
       done.current ||
-      placedRef.current.has(piece) ||
-      placedRef.current.has(slot)
+      placedRef.current.has(piece)
     )
       return;
     if (piece !== slot) {
       setFeedback("Mình thử một ô khác nhé!");
-      setBump(true);
-      setTimeout(() => setBump(false), 280);
+      reactAt(piece, slot, true);
+      setSelected(null);
+      onWrong?.();
       return;
     }
+    reactAt(piece, slot, false);
     const next = new Set(placedRef.current);
     next.add(piece);
     placedRef.current = next;
@@ -239,10 +253,11 @@ function PlayableBoard({
     );
   return (
     <div className="puzzle-layout">
+      {reaction?.wrong && <div key={reaction.id} className="wrong-screen-tint" aria-hidden="true" />}
       <div className="board-area" ref={area}>
         <div
           ref={board}
-          className={`puzzle-board ${bump ? "gentle-bump" : ""} ${ghost ? "drag-active" : ""}`}
+          className={`puzzle-board ${ghost ? "drag-active" : ""}`}
           style={{ width: size.width, height: size.height }}
         >
           {count <= 144n ? (
@@ -309,6 +324,10 @@ function PlayableBoard({
               }}
             />
           )}
+          {reaction && <div key={reaction.id} className={`cell-reaction ${reaction.wrong ? 'wrong' : 'correct'}`} aria-hidden="true" style={{left: `${Number(reaction.slot % BigInt(round.columns)) * 100 / round.columns}%`, top: `${Number(reaction.slot / BigInt(round.columns)) * 100 / round.rows}%`, width: `${100 / round.columns}%`, height: `${100 / round.rows}%`}}>
+            {reaction.wrong && <div className="wrong-piece-return"><PieceArt piece={reaction.piece} round={round} /></div>}
+            <span className="reaction-symbol">{reaction.wrong ? '✕' : '✓'}{!reaction.wrong && <small>✨</small>}</span>
+          </div>}
         </div>
       </div>
       <section className="pieces-area" aria-label="Các mảnh ghép">
@@ -337,7 +356,7 @@ function PlayableBoard({
             ) : (
               <button
                 key={p.toString()}
-                className={`puzzle-piece ${selected === p ? "selected" : ""} ${ghost?.piece === p ? "is-dragging" : ""}`}
+                className={`puzzle-piece ${selected === p ? "selected" : ""} ${ghost?.piece === p ? "is-dragging" : ""} ${reaction?.wrong && reaction.piece === p ? "wrong-tray-piece" : ""}`}
                 aria-label={`Mảnh ghép ${p + 1n}`}
                 aria-pressed={selected === p}
                 onClick={() => {

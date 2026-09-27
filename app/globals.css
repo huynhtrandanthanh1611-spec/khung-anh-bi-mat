@@ -2464,3 +2464,33 @@ h3,
     display: none;
   }
 }
+
+/* Playful toy board and brief, localized answer feedback. */
+.game-mode { background: radial-gradient(ellipse at 85% 10%, #fff3dc 0, transparent 35%), linear-gradient(160deg,#e3f7ff,#fff8ee); }
+.game-mode .play-heading h1 { text-shadow: 0 3px 0 white, 0 5px 0 #bee3dd; }
+.game-mode .puzzle-board { border: 7px solid #79b7ab; border-radius: 30px; box-shadow: 0 8px 0 #5b998e, 0 15px 28px #386d7526; position: relative; }
+.game-mode .pieces-area { border: 4px solid #a5c8df; border-radius: 30px; background:#fffcf3; box-shadow:0 7px 0 #80adc2,0 14px 24px #386d751f; }
+.game-mode .tray-title { color:#355e71; }
+.game-mode .puzzle-piece { border-radius:18px; background:#fffdf6; border-color:#8cbdb0; box-shadow:0 4px 0 #b7d6c7; }
+.game-mode .puzzle-piece.selected { border-color:#e2a341; background:#fff1be; }
+.game-mode .round-control,.game-mode .quiet-exit { border:2px solid #a8cbc4; box-shadow:0 4px 0 #9ebfb4; border-radius:22px; }
+.game-mode button:active { transform:scale(.94); }
+.game-mode .puzzle-cell:active { transform:none; }
+.game-mode .puzzle-cell.drop-target { background:#fff0af; box-shadow:inset 0 0 0 4px #f4c761; }
+.garden-edge { position:absolute; bottom:4px; left:3%; right:3%; display:flex; justify-content:space-between; font-size:clamp(22px,3vw,42px); pointer-events:none; opacity:.7; }
+.corner-rainbow { position:absolute; top:10px; right:13%; width:95px; opacity:.45; pointer-events:none; }
+.corner-rainbow svg { width:100%; height:auto; }
+.wrong-screen-tint { position:fixed; inset:0; background:rgba(255,70,70,.16); pointer-events:none; z-index:70; animation:wrong-tint 450ms ease-out both; }
+.cell-reaction { position:absolute; pointer-events:none; z-index:8; display:grid; place-items:center; }
+.reaction-symbol { position:absolute; display:grid; place-items:center; width:clamp(24px,65%,76px); aspect-ratio:1; border-radius:50%; background:#fff8f0ed; color:#cc3548; font:bold clamp(26px,4vw,64px)/1 Nunito,sans-serif; box-shadow:0 3px 8px #85435026; animation:reaction-pop 800ms ease-out both; }
+.correct .reaction-symbol { color:#23866b; background:#f2ffe8ed; }
+.reaction-symbol small { position:absolute; right:-25%; top:-15%; font-size:.5em; }
+.wrong-piece-return { position:absolute; inset:3px; display:grid; place-items:center; background:#fff7ed; border-radius:10px; animation:wrong-return 700ms ease-out both; }
+.wrong-piece-return .piece-art { width:100%; height:100%; }
+.wrong-tray-piece { animation:wrong-wiggle 380ms ease-out; }
+@keyframes wrong-tint { 0%,100% {opacity:0} 12% {opacity:.4} 55% {opacity:1} }
+@keyframes reaction-pop { 0% {transform:scale(0);opacity:0} 25% {transform:scale(1.2);opacity:1} 40%,75% {transform:scale(1);opacity:1} 100% {transform:scale(.8);opacity:0} }
+@keyframes wrong-wiggle { 15% {transform:translateX(-6px)} 35% {transform:translateX(6px)} 55% {transform:translateX(-4px)} 75% {transform:translateX(4px)} 100% {transform:translateX(0)} }
+@keyframes wrong-return { 0% {opacity:.9;transform:translateX(0)} 15% {transform:translateX(-6px)} 30% {transform:translateX(6px)} 45% {transform:translateX(-4px)} 60% {transform:translateX(0);opacity:.85} 100% {transform:scale(.7);opacity:0} }
+@media(max-width:700px) { .corner-rainbow {width:55px;right:24%;top:5px} .garden-edge {font-size:23px} .game-mode .puzzle-board {border-width:5px;border-radius:20px} }
+@media(prefers-reduced-motion:reduce) { .wrong-tray-piece,.wrong-piece-return {animation:none} .wrong-piece-return {opacity:.5} .reaction-symbol {animation:none} .game-cloud,.floating-star {animation:none} }

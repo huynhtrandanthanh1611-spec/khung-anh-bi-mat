@@ -39,6 +39,12 @@ export default function GameMode({
   );
   const previousSticker = useRef<string | undefined>(undefined);
   const context = useRef<AudioContext | null>(null);
+  const voices = useRef<OscillatorNode[]>([]);
+  function stopEffects() {
+    voices.current.forEach(voice => { try { voice.stop(); voice.disconnect(); } catch {} });
+    voices.current = [];
+  }
+  useEffect(() => { if (!sound) stopEffects(); }, [sound]);
   const round = game.rounds[index],
     total = game.rounds.length;
   useEffect(() => {
@@ -47,6 +53,7 @@ export default function GameMode({
     return () => {
       document.body.style.overflow = old;
       audio?.pause();
+      stopEffects();
       void context.current?.close();
       context.current = null;
     };
@@ -67,7 +74,8 @@ export default function GameMode({
     }
   }
   function chime(done = false) {
-    if (!sound) return;
+    if (!sound || !game.sfxEnabled) return;
+    stopEffects();
     try {
       context.current ??= new AudioContext();
       const ctx = context.current;
@@ -83,12 +91,34 @@ export default function GameMode({
         gain.gain.exponentialRampToValueAtTime(0.001, start + 0.3);
         oscillator.connect(gain);
         gain.connect(ctx.destination);
+        voices.current.push(oscillator);
         oscillator.start(start);
         oscillator.stop(start + 0.32);
       });
     } catch {
       /* Silent play remains available. */
     }
+  }
+  function buzz() {
+    if (!sound || !game.sfxEnabled) return;
+    stopEffects();
+    try {
+      context.current ??= new AudioContext();
+      const ctx = context.current;
+      void ctx.resume();
+      [0, 0.24].forEach(delay => {
+        const voice = ctx.createOscillator(), gain = ctx.createGain();
+        const at = ctx.currentTime + delay;
+        voice.type = "sawtooth";
+        voice.frequency.setValueAtTime(145, at);
+        voice.frequency.linearRampToValueAtTime(95, at + 0.19);
+        gain.gain.setValueAtTime(0, at);
+        gain.gain.linearRampToValueAtTime(0.035, at + 0.02);
+        gain.gain.linearRampToValueAtTime(0, at + 0.2);
+        voice.connect(gain); gain.connect(ctx.destination);
+        voices.current.push(voice); voice.start(at); voice.stop(at + 0.21);
+      });
+    } catch { /* Visual feedback works without audio support. */ }
   }
   function start() {
     wakeAudio();
@@ -105,6 +135,8 @@ export default function GameMode({
   }
   return (
     <div className={`game-mode phase-${phase}`}>
+      <div className="garden-edge" aria-hidden="true"><span>🌼</span><span>🌷</span><span>🍀</span><span>🌸</span></div>
+      <div className="corner-rainbow" aria-hidden="true"><Rainbow /></div>
       <div className="game-cloud cloud-one" />
       <div className="game-cloud cloud-two" />
       <div className="game-sun">
@@ -148,6 +180,7 @@ export default function GameMode({
           <PuzzleBoard
             key={`${session}-${round.id}`}
             round={round}
+            onWrong={buzz}
             onCorrect={() => chime()}
             onComplete={() => {
               const sticker = chooseRewardSticker(
